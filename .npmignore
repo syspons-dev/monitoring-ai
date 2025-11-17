@@ -1,0 +1,36 @@
+# Source files
+src/
+tests/
+examples/
+
+# Configuration
+tsconfig.json
+tsconfig.test.json
+.eslintrc.json
+.prettierrc
+vitest.config.ts
+
+# Development
+.github/
+*.test.ts
+*.spec.ts
+*.test.js
+*.spec.js
+
+# Documentation (except README)
+docs/
+
+# IDE
+.vscode/
+.idea/
+
+# CI/CD
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Misc
+.DS_Store
+*.log
+coverage/
+.nyc_output/
