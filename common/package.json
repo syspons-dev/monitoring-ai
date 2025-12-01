@@ -26,6 +26,6 @@
     "node": ">=18.0.0"
   },
   "config": {
-    "debug_version": 0
+    "debug_version": 2
   }
 }

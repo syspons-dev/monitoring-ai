@@ -1,40 +1,48 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseMessage, AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import {
-  StructuredDataAttribute,
-  MonitoringAiEmbeddingQueryOptions,
-} from '@syspons/monitoring-ai-common';
+import { BaseMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { StructuredDataAttribute } from '@syspons/monitoring-ai-common';
 import { buildZodSchema } from './schema.js';
-import { DynamicStructuredTool } from '@langchain/core/tools';
-import type { EmbeddingController } from '../controllers/embedding.controller.js';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import { MonitoringAiPrompt } from './prompts.js';
+import { EmbeddingController, createRetrieverTool } from '../index.js';
 
 // ============================================================================
 // Model Invocation Types
 // ============================================================================
 
 /**
- * Parameters for invoking the model with optional structured output
+ * Base parameters shared by all invocation types
  */
-export interface InvokeModelParams {
+export interface BaseInvokeParams {
   /** The ChatOpenAI model instance to invoke */
   model: ChatOpenAI;
   /** Array of messages to send to the model */
   messages: BaseMessage[];
   /** Optional structured data attributes to apply as schema */
   structuredDataAttributes?: StructuredDataAttribute[];
+  /** Enable debug console logs (default: false) */
+  debug?: boolean;
 }
 
 /**
- * Result from model invocation
+ * Parameters for invoking the model with optional structured output
  */
-export interface InvokeModelResult {
+export interface InvokeModelParams extends BaseInvokeParams {}
+
+/**
+ * Base result shared by all invocation types
+ */
+export interface BaseInvokeResult {
   /** The AI response message */
   response: AIMessage;
   /** Structured data extracted from the response (only present when schema provided) */
   structuredData?: Record<string, any>;
 }
+
+/**
+ * Result from model invocation
+ */
+export interface InvokeModelResult extends BaseInvokeResult {}
 
 // ============================================================================
 // Model Invocation Functions
@@ -99,31 +107,21 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
 /**
  * Parameters for invoking an agent with retriever support
  */
-export interface InvokeAgentParams {
-  /** The ChatOpenAI model instance to use */
-  model: ChatOpenAI;
-  /** Array of messages to send to the agent */
-  messages: BaseMessage[];
+export interface InvokeAgentParams extends BaseInvokeParams {
   /** Optional embedding controller for retriever tool */
   embeddingController?: EmbeddingController;
   /** Optional additional tools to provide to the agent */
   additionalTools?: StructuredToolInterface[];
   /** Optional system prompt to guide agent behavior */
   systemPrompt?: MonitoringAiPrompt;
-  /** Optional structured data attributes to apply as schema */
-  structuredDataAttributes?: StructuredDataAttribute[];
 }
 
 /**
  * Result from agent invocation
  */
-export interface InvokeAgentResult {
+export interface InvokeAgentResult extends BaseInvokeResult {
   /** All messages from the agent conversation */
   messages: BaseMessage[];
-  /** The final AI response message */
-  response: AIMessage;
-  /** Structured data extracted from the response (only present when schema provided) */
-  structuredData?: Record<string, any>;
 }
 
 // ============================================================================
@@ -168,70 +166,13 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
     embeddingController,
     additionalTools = [],
     structuredDataAttributes,
+    debug = false,
   } = params;
   const systemPrompt = params.systemPrompt?.prompt;
 
   // ============================================================================
   // Inner Functions
   // ============================================================================
-
-  /**
-   * Create retriever tool from embedding controller
-   */
-  async function createRetrieverTool(
-    controller: EmbeddingController
-  ): Promise<StructuredToolInterface> {
-    const retriever = controller.getRetriever();
-
-    // Log collection info for debugging
-    const docCount = await controller.getDocumentCount();
-    console.log(
-      `[invokeAgent] Collection "${controller.getCollectionName()}" has ${docCount} documents`
-    );
-
-    const retrieverTool = new DynamicStructuredTool({
-      name: 'search_knowledge_base',
-      description:
-        'Search the knowledge base for relevant information from uploaded documents and files. Use this when the user asks about specific content, names, details, or information that might be stored in documents.',
-      schema: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: 'The search query to find relevant documents',
-          },
-        },
-        required: ['query'],
-      } as any,
-      func: async ({ query }: { query: string }) => {
-        console.log(`[invokeAgent] Retriever tool called with query: "${query}"`);
-        try {
-          const docs = await retriever._getRelevantDocuments(query);
-          console.log(`[invokeAgent] Retriever found ${docs.length} documents`);
-
-          if (docs.length === 0) {
-            console.warn(`[invokeAgent] No documents found! Check:
-              - Collection name: ${controller.getCollectionName()}
-              - ChromaDB URL: ${controller.getServerUrl()}
-              - Documents added to collection`);
-          }
-
-          return JSON.stringify(
-            docs.map((doc) => ({
-              content: doc.pageContent,
-              metadata: doc.metadata,
-            }))
-          );
-        } catch (error) {
-          console.error(`[invokeAgent] Retriever error:`, error);
-          throw error;
-        }
-      },
-    });
-
-    console.log(`[invokeAgent] Added retriever tool to available tools`);
-    return retrieverTool;
-  }
 
   /**
    * Build message array with optional system prompt
@@ -264,7 +205,11 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
     const outputMessages = excludeSystemMessage ? allMessages.slice(1) : allMessages;
 
     if (structuredDataAttributes && structuredDataAttributes.length > 0) {
-      const structuredData = await extractStructuredData(model, allMessages, structuredDataAttributes);
+      const structuredData = await extractStructuredData(
+        model,
+        allMessages,
+        structuredDataAttributes
+      );
 
       return {
         messages: outputMessages,
@@ -322,7 +267,10 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
   // Build tools array
   const tools: StructuredToolInterface[] = [...additionalTools];
   if (embeddingController) {
-    const retrieverTool = await createRetrieverTool(embeddingController);
+    const retrieverTool = await createRetrieverTool({
+      controller: embeddingController,
+      debug,
+    });
     tools.push(retrieverTool);
   }
 

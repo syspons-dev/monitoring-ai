@@ -42,7 +42,7 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
     state: MonitoringAiBaseGraphState
   ): Promise<Partial<MonitoringAiBaseGraphState>> => {
     console.log('MonitoringAiChatGraph CHAT_NODE invoked');
-    
+
     try {
       const userMessage = state.messages?.[state.messages.length - 1];
 
@@ -61,6 +61,7 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
           systemPrompt: KNOWLEDGE_BASE_SYSTEM_PROMPT,
           embeddingController: this.embeddingController,
           structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
+          debug: this.debug,
         });
 
         return {
@@ -74,6 +75,7 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
         model: this.model,
         messages: [userMessage],
         structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
+        debug: this.debug,
       });
 
       return {

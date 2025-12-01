@@ -153,6 +153,8 @@ export class EmbeddingController {
       });
 
       this.isInitialized = true;
+      console.log('EmbeddingController: initialized with ChromaDB at', chromaUrl);
+      console.log('EmbeddingController: Using collection name', config.collectionName);
     } catch (error) {
       throw new Error(
         `Failed to initialize EmbeddingController: ${error instanceof Error ? error.message : String(error)}`
@@ -629,6 +631,20 @@ export class EmbeddingController {
   }
 
   /**
+   * Ensure the controller is initialized before operations
+   * @private
+   */
+  private ensureInitialized(): void {
+    if (!this.isInitialized || !this.vectorStore) {
+      throw new Error('EmbeddingController is not initialized. Call initialize() first.');
+    }
+  }
+
+  // ============================================================================
+  // Retriever Integration
+  // ============================================================================
+
+  /**
    * Get a retriever instance for use with LangChain chains and agents
    * @param options Query options for the retriever
    * @returns EmbeddingRetriever instance
@@ -638,13 +654,7 @@ export class EmbeddingController {
     return new EmbeddingRetriever(this);
   }
 
-  /**
-   * Ensure the controller is initialized before operations
-   * @private
-   */
-  private ensureInitialized(): void {
-    if (!this.isInitialized || !this.vectorStore) {
-      throw new Error('EmbeddingController is not initialized. Call initialize() first.');
-    }
+  getRetrieverOptions(): MonitoringAiEmbeddingQueryOptions | undefined {
+    return this.retrieverOptions;
   }
 }

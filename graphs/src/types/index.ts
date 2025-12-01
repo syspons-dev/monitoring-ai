@@ -34,7 +34,7 @@ export const MonitoringAiBaseGraphStateAnnotation = Annotation.Root({
 export type MonitoringAiBaseGraphState = typeof MonitoringAiBaseGraphStateAnnotation.State;
 
 // Re-export embedding controller types for convenience
-export type { EmbeddingConfig, EmbeddingDocument } from '../controllers/embedding.controller';
+export type { EmbeddingConfig, EmbeddingDocument } from '../controllers/index.js';
 
 // Re-export common embedding types
 export type {

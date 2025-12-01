@@ -1,7 +1,6 @@
 import { BaseRetriever } from '@langchain/core/retrievers';
 import { CallbackManagerForRetrieverRun } from '@langchain/core/callbacks/manager';
 import { Document } from '@langchain/core/documents';
-import { MonitoringAiEmbeddingQueryOptions } from '@syspons/monitoring-ai-common';
 import type { EmbeddingController } from './embedding.controller.js';
 
 /**

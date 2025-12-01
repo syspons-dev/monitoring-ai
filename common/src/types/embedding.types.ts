@@ -31,6 +31,7 @@ export enum EmbeddingSearchMethod {
  * Search strictness levels for controlling result relevance thresholds
  */
 export enum SearchStrictness {
+  all_results = 'all_results',
   relaxed = 'relaxed',
   balanced = 'balanced',
   strict = 'strict',
@@ -54,6 +55,13 @@ export interface SearchStrictnessInfo {
  * Registry of strictness levels with their score thresholds
  */
 export const SEARCH_STRICTNESS_LEVELS: Record<SearchStrictness, SearchStrictnessInfo> = {
+  [SearchStrictness.all_results]: {
+    level: SearchStrictness.all_results,
+    name: 'All Results',
+    description:
+      "No score filtering. Returns all results regardless of similarity. Ideal for summarization, context gathering, or tasks that don't require data extraction.",
+    minScore: 0,
+  },
   [SearchStrictness.relaxed]: {
     level: SearchStrictness.relaxed,
     name: 'Relaxed',

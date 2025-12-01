@@ -1,13 +1,14 @@
 import { CompiledStateGraph } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 
-import { MonitoringAiBaseGraphState } from '../types/index.js';
-import { MonitoringGraphSettings } from '../utils';
 import {
   MonitoringAiBaseGraphStateType,
   MonitoringAiDataFlowConfig,
 } from '@syspons/monitoring-ai-common';
-import { EmbeddingController } from '../controllers/embedding.controller.js';
+
+import { MonitoringAiBaseGraphState } from '../types/index.js';
+import { MonitoringGraphSettings } from '../utils/index.js';
+import { EmbeddingController } from '../controllers/index.js';
 import {
   convertToLangChainMessages,
   convertFromLangChainMessages,
@@ -16,6 +17,7 @@ import {
 export interface MonitoringAiBaseGraphInvokeParams {
   state: MonitoringAiBaseGraphStateType;
   dataflowConfig?: MonitoringAiDataFlowConfig;
+  debug?: boolean;
 }
 
 export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState> {
@@ -27,6 +29,9 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
   dataFlowConfig?: MonitoringAiDataFlowConfig;
 
   embeddingController: EmbeddingController;
+
+  // Enable debug console logs (default: false)
+  debug: boolean = false;
 
   constructor(settings: MonitoringGraphSettings) {
     this.settings = settings;
@@ -50,6 +55,11 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
   ): Promise<MonitoringAiBaseGraphStateType> {
     try {
       this.dataFlowConfig = params.dataflowConfig;
+
+      // Update debug flag if provided
+      if (params.debug !== undefined) {
+        this.debug = params.debug;
+      }
 
       // Convert MonitoringAiMessage[] to LangChain BaseMessage[]
       const langchainMessages = convertToLangChainMessages(params.state.messages);

@@ -21,6 +21,7 @@ export interface MonitoringAiGraphsProcessorParams {
   modelParams: MonitoringAiModelSettings;
   state: MonitoringAiBaseGraphStateType;
   embeddingController?: EmbeddingController;
+  debug?: boolean;
 }
 
 class MonitoringAiGraphsProcessor {
@@ -125,6 +126,7 @@ class MonitoringAiGraphsProcessor {
     return await baseGraph.invokeGraph({
       state,
       dataflowConfig,
+      debug: params.debug,
     });
   }
 }
