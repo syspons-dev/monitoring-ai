@@ -48,3 +48,5 @@ temp/
 
 # ChromaDB local data
 chroma_data/
+
+.npmrc
