@@ -12,7 +12,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
@@ -21,6 +21,6 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": ["graphs/src/**/*.ts", "common/src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/dist", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -11,7 +11,8 @@ This repository contains dynamic LangGraph graphs using Azure AI Foundry that wi
 - Prefer explicit return types for public APIs
 - Use interfaces for data structures and types for unions/primitives
 - Export all public types from `src/types/index.ts`
-- Avoid using `any` - use `unknown` when type is truly unknown
+- **NEVER use `any` type** - use `unknown` when type is truly unknown, or proper type assertions
+- Avoid type casts with `as any` - find type-safe alternatives
 
 ### Naming Conventions
 - Use camelCase for variables, functions, and methods
@@ -216,6 +217,31 @@ npm run test:coverage # Generate coverage report
 npm run build         # Build for production
 npm run clean         # Remove build artifacts
 ```
+
+## Client-Side Integration Guidance
+
+When the user requests client-side integration guidance or UI prompts for specific features, provide detailed implementation examples that:
+
+1. **Show dynamic UI patterns** based on type/configuration data
+2. **Include complete code examples** with TypeScript types
+3. **Demonstrate conditional rendering** based on metadata flags
+4. **Provide step-by-step flows** for complete feature implementation
+5. **Emphasize type safety** using exported types and enums from `@syspons/monitoring-ai-common`
+
+**Example Topics:**
+- Embedding provider UI integration (dropdowns vs text inputs based on `allowCustomModelName`)
+- Graph selection interfaces (using `MonitoringAiGraphs` enum and graph descriptions)
+- Data source configuration UIs (vector stores, APIs, databases)
+- Workflow configuration forms (model settings, data flow, embeddings)
+- Search method selection (using `SEARCH_METHODS` registry)
+- Document upload interfaces (with type detection and chunking options)
+
+**Response Format:**
+- Start with clear TypeScript code examples
+- Show how to consume registry/configuration data from common package
+- Include conditional logic for dynamic UI elements
+- Provide complete implementation flow (selection → validation → submission)
+- List relevant types/enums for type-safe integration
 
 ## Resources
 

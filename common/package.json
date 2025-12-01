@@ -1,0 +1,32 @@
+{
+  "name": "@syspons/monitoring-ai-common",
+  "version": "0.1.0-debug_version-131",
+  "description": "Shared types and utilities for monitoring AI projects",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "start:debug": "tsc-watch --noClear -p tsconfig.json --onSuccess 'bash ../.vscode/debug.common.sh'",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "config": {
+    "debug_version": 131
+  }
+}

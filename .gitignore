@@ -40,5 +40,11 @@ tmp/
 temp/
 *.tmp
 
+# Debug flag files
+.debug_version_updating
+
 # LangGraph API
 .langgraph_api
+
+# ChromaDB local data
+chroma_data/
