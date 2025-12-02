@@ -14,6 +14,7 @@ export enum StructuredDataAttributeType {
 export interface StructuredDataAttribute {
   name: string;
   type: StructuredDataAttributeType;
+  enabled: boolean;
   description?: string;
   required?: boolean;
   itemsType?: StructuredDataAttributeType; // Array items type definition
