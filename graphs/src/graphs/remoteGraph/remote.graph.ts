@@ -1,49 +1,45 @@
 import { CompiledStateGraph } from '@langchain/langgraph';
 
+import { MonitoringAiBaseGraphStateType, RemoteGraphConfig } from '@syspons/monitoring-ai-common';
+
 import { MonitoringAiBaseGraph, MonitoringAiBaseGraphInvokeParams } from '../index.js';
 import { MonitoringGraphSettings } from '../../index.js';
 import { MonitoringAiBaseGraphState } from '../../types/index.js';
-import { MonitoringAiBaseGraphStateType } from '@syspons/monitoring-ai-common';
-
-export interface ExternalGraphConfig {
-  externalUrl: string;
-  apiKey?: string;
-  timeout?: number;
-}
 
 /**
- * External Graph implementation that delegates to an externally deployed graph via REST API.
+ * Remote Graph implementation that delegates to a remotely deployed graph via REST API.
  *
- * This class acts as a proxy to an external graph service, sending requests and handling responses.
+ * This class acts as a proxy to a remote graph service, sending requests and handling responses.
  * It maintains the same interface as other MonitoringAiBaseGraph implementations for consistency.
  */
-export class MonitoringAiExternalGraph extends MonitoringAiBaseGraph<MonitoringAiBaseGraphState> {
+export class MonitoringAiRemoteGraph extends MonitoringAiBaseGraph<MonitoringAiBaseGraphState> {
   // This is a proxy graph, so we don't compile a local graph
   graph: CompiledStateGraph<MonitoringAiBaseGraphState, Partial<MonitoringAiBaseGraphState>>;
 
-  private externalUrl: string;
+  private remoteUrl: string;
   private apiKey?: string;
   private timeout: number;
 
-  constructor(settings: MonitoringGraphSettings, config: ExternalGraphConfig) {
+  constructor(settings: MonitoringGraphSettings, config: RemoteGraphConfig) {
     super(settings);
 
-    this.externalUrl = config.externalUrl;
+    this.remoteUrl = config.remoteUrl;
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || 30000; // 30 seconds default
 
-    // For external graph, we don't need a local compiled graph
+    // For remote graph, we don't need a local compiled graph
     // but we need to satisfy the abstract property requirement
     this.graph = null as any;
   }
 
   /**
-   * Invokes the external graph by sending a REST request
+   * Invokes the remote graph by sending a REST request
    */
   override async invokeGraph(
     params: MonitoringAiBaseGraphInvokeParams
   ): Promise<MonitoringAiBaseGraphStateType> {
     try {
+      console.log(`Invoking remote graph at ${this.remoteUrl}`);
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -63,7 +59,7 @@ export class MonitoringAiExternalGraph extends MonitoringAiBaseGraph<MonitoringA
         },
       });
 
-      const response = await fetch(this.externalUrl, {
+      const response = await fetch(this.remoteUrl, {
         signal: controller.signal,
         method: 'POST',
         headers,
@@ -73,14 +69,14 @@ export class MonitoringAiExternalGraph extends MonitoringAiBaseGraph<MonitoringA
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`External graph request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Remote graph request failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
 
       // Validate the response has the expected structure
       if (!result || typeof result !== 'object') {
-        throw new Error('Invalid response from external graph: expected object');
+        throw new Error('Invalid response from remote graph: expected object');
       }
 
       // Normalize field names that may come in different casing from external APIs
@@ -88,20 +84,18 @@ export class MonitoringAiExternalGraph extends MonitoringAiBaseGraph<MonitoringA
 
       // Validate required fields
       if (!normalizedResult.messages || !Array.isArray(normalizedResult.messages)) {
-        throw new Error(
-          'Invalid response from external graph: missing or invalid "messages" array'
-        );
+        throw new Error('Invalid response from remote graph: missing or invalid "messages" array');
       }
 
       return normalizedResult as MonitoringAiBaseGraphStateType;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error(`External graph request timed out after ${this.timeout}ms`);
+          throw new Error(`Remote graph request timed out after ${this.timeout}ms`);
         }
-        throw new Error(`Failed to invoke external graph: ${error.message}`);
+        throw new Error(`Failed to invoke remote graph: ${error.message}`);
       }
-      throw new Error('Failed to invoke external graph: Unknown error');
+      throw new Error('Failed to invoke remote graph: Unknown error');
     }
   }
 
@@ -169,12 +163,12 @@ export class MonitoringAiExternalGraph extends MonitoringAiBaseGraph<MonitoringA
   }
 
   START_NODE = (_state: MonitoringAiBaseGraphState): Partial<MonitoringAiBaseGraphState> => {
-    // For external graphs, nodes are handled by the remote service
+    // For remote graphs, nodes are handled by the remote service
     return {};
   };
 
   END_NODE = (_state: MonitoringAiBaseGraphState): Partial<MonitoringAiBaseGraphState> => {
-    // For external graphs, nodes are handled by the remote service
+    // For remote graphs, nodes are handled by the remote service
     return {};
   };
 }

@@ -1,14 +1,14 @@
-# External Graph Service
+# Remote Graph Service
 
-The External Graph service provides a way to integrate externally deployed LangGraph graphs via REST API. This allows you to use graphs that are deployed separately from your main application.
+The Remote Graph service provides a way to integrate remotely deployed LangGraph graphs via REST API. This allows you to use graphs that are deployed separately from your main application.
 
 ## Overview
 
-`MonitoringAiExternalGraph` acts as a proxy that forwards graph invocations to an external service via HTTP POST requests. It maintains the same interface as other graph implementations for consistency.
+`MonitoringAiRemoteGraph` acts as a proxy that forwards graph invocations to a remote service via HTTP POST requests. It maintains the same interface as other graph implementations for consistency.
 
 ## Features
 
-- **External Graph Integration**: Connect to graphs deployed on separate servers
+- **Remote Graph Integration**: Connect to graphs deployed on separate servers
 - **Configurable Authentication**: Optional API key support via Bearer token
 - **Timeout Control**: Configurable request timeout with abort handling
 - **Error Handling**: Comprehensive error messages for debugging
@@ -21,21 +21,22 @@ To use a custom graph, configure it in your `MonitoringAiWorkflowConfig`:
 ```typescript
 const config: MonitoringAiWorkflowConfig = {
   monitoringAiGraph: MonitoringAiGraphs.external_graph,
-  
-  // Required: URL of the external graph service
-  externalUrl: 'https://your-graph-service.com/api/graph/invoke',
-  
-  // Optional: API key for authentication
-  externalApiKey: 'your-api-key-here',
-  
-  // Optional: Request timeout in milliseconds (default: 30000)
-  externalTimeout: 60000,
+  remoteGraphConfig: {
+    // Required: URL of the remote graph service
+    remoteUrl: 'https://your-graph-service.com/api/graph/invoke',
+    
+    // Optional: API key for authentication
+    apiKey: 'your-api-key-here',
+    
+    // Optional: Request timeout in milliseconds (default: 30000)
+    timeout: 60000,
+  },
 };
 ```
 
-## External API Contract
+## Remote API Contract
 
-Your external graph service should implement the following REST API:
+Your remote graph service should implement the following REST API:
 
 ### Endpoint
 `POST <externalUrl>`
@@ -81,13 +82,15 @@ The service should return a JSON object representing the updated state:
 import { MonitoringAiGraphsProcessor } from './graphs/graphs.processor';
 import { MonitoringAiGraphs } from '@syspons/monitoring-ai-common';
 
-// Configure the processor with external graph settings
+// Configure the processor with remote graph settings
 const result = await MonitoringAiGraphsProcessor.runGraph({
   graphConfig: {
     monitoringAiGraph: MonitoringAiGraphs.external_graph,
-    externalUrl: 'https://api.example.com/graph',
-    externalApiKey: process.env.GRAPH_API_KEY,
-    externalTimeout: 45000,
+    remoteGraphConfig: {
+      remoteUrl: 'https://api.example.com/graph',
+      apiKey: process.env.GRAPH_API_KEY,
+      timeout: 45000,
+    },
   },
   modelParams: {
     MODEL_NAME: 'gpt-4',
@@ -106,7 +109,7 @@ console.log('Graph result:', result);
 
 ## Error Handling
 
-The custom graph service provides detailed error messages:
+The remote graph service provides detailed error messages:
 
 - **Missing URL**: Throws if `externalUrl` is not provided in config
 - **Timeout**: Throws if request exceeds configured timeout
@@ -134,20 +137,20 @@ try {
 
 ### Constructor
 ```typescript
-new MonitoringAiExternalGraph(settings, config)
+new MonitoringAiRemoteGraph(settings, config)
 ```
 
 **Parameters:**
 - `settings`: `MonitoringGraphSettings` - Graph configuration
-- `config`: `ExternalGraphConfig` - External graph configuration
-  - `externalUrl`: string - URL of the external graph service
+- `config`: `RemoteGraphConfig` - Remote graph configuration
+  - `remoteUrl`: string - URL of the remote graph service
   - `apiKey?`: string - Optional API key for authentication
   - `timeout?`: number - Optional timeout in ms (default: 30000)
 
 ### Methods
 
 #### `invokeGraph(state)`
-Invokes the external graph with the provided state.
+Invokes the remote graph with the provided state.
 
 **Parameters:**
 - `state`: `MonitoringAiBaseGraphState` - Current graph state
@@ -180,12 +183,12 @@ Invokes the external graph with the provided state.
 Example test setup:
 
 ```typescript
-import { MonitoringAiExternalGraph } from './externalGraph';
+import { MonitoringAiRemoteGraph } from './remoteGraph';
 
 // Mock fetch for testing
 global.fetch = vi.fn();
 
-test('should invoke external graph successfully', async () => {
+test('should invoke remote graph successfully', async () => {
   const mockResponse = {
     messages: [{ role: 'assistant', content: 'Response' }]
   };
@@ -195,7 +198,7 @@ test('should invoke external graph successfully', async () => {
     json: async () => mockResponse,
   });
 
-  const graph = new MonitoringAiExternalGraph(settings, {
+  const graph = new MonitoringAiRemoteGraph(settings, {
     externalUrl: 'https://test.com/graph',
   });
 

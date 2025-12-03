@@ -243,6 +243,64 @@ When the user requests client-side integration guidance or UI prompts for specif
 - Provide complete implementation flow (selection → validation → submission)
 - List relevant types/enums for type-safe integration
 
+## Automated Git Commits via GitHub API
+
+### Quick Reference
+
+When asked to commit changes, use the automated commit workflow:
+
+1. **Analyze changes:**
+   ```bash
+   node .vscode/copilot-tools/copilot-commit.mjs --analyze
+   ```
+   Shows summary of changed files and suggested commit message
+
+2. **Prepare for GitHub API:**
+   ```bash
+   node .vscode/copilot-tools/copilot-commit.mjs --prepare
+   ```
+   Outputs JSON with: `{owner, repo, branch, files, message}`
+
+3. **Commit via GitHub MCP:**
+   ```typescript
+   mcp_github_push_files({
+     owner: "syspons",
+     repo: "monitoring-ai", 
+     branch: "main",
+     files: [...], // from --prepare output
+     message: "..." // suggested commit message
+   })
+   ```
+
+### User Request Patterns
+
+**"Commit the changes"** → Run `--prepare` → Use `mcp_github_push_files`
+
+**"What changes are ready?"** → Run `--analyze` → Show summary
+
+**"Commit with message X"** → Run `--prepare` → Override message → Push
+
+### Important Notes
+
+- ✅ Pushes directly to GitHub (bypasses local git)
+- ✅ Generates semantic commit messages (Conventional Commits)
+- ✅ Handles text files only
+- ❌ Cannot delete files via API (use terminal git for deletions)
+- ⚠️ User needs `git pull` after to sync local repo
+
+### Commit Message Format
+
+Follow Conventional Commits:
+- `feat(scope)`: New features
+- `fix(scope)`: Bug fixes
+- `refactor(scope)`: Code refactoring
+- `docs(scope)`: Documentation
+- `chore(scope)`: Maintenance
+
+Scopes: `common`, `graphs`, `config`, or combination like `common,graphs`
+
+**Full Documentation:** `.vscode/copilot-tools/COPILOT_COMMIT_README.md`
+
 ## Resources
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)

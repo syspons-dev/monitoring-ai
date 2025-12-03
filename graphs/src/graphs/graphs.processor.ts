@@ -4,11 +4,7 @@ import {
   MonitoringAiGraphs,
   MonitoringAiWorkflowConfig,
 } from '@syspons/monitoring-ai-common';
-import {
-  MonitoringAiChatGraph,
-  MonitoringAiExternalGraph,
-  MonitoringAiBaseGraph,
-} from './index.js';
+import { MonitoringAiChatGraph, MonitoringAiRemoteGraph, MonitoringAiBaseGraph } from './index.js';
 import {
   EmbeddingController,
   MonitoringAiModelSettings,
@@ -99,15 +95,18 @@ class MonitoringAiGraphsProcessor {
         baseGraph = new MonitoringAiChatGraph(settings);
         break;
 
-      case MonitoringAiGraphs.external_graph:
-        // Graph is deployed externally - requires externalUrl in config
-        if (!graphConfig.externalUrl) {
-          throw new Error('Custom graph requires externalUrl in configuration');
+      case MonitoringAiGraphs.remote_graph:
+        if (!graphConfig.remoteGraphConfig) {
+          throw new Error('Remote graph configuration is missing');
         }
-        baseGraph = new MonitoringAiExternalGraph(settings, {
-          externalUrl: graphConfig.externalUrl,
-          apiKey: graphConfig.externalApiKey,
-          timeout: graphConfig.externalTimeout,
+        // Graph is deployed remotely - requires remoteUrl in config
+        if (!graphConfig.remoteGraphConfig?.remoteUrl) {
+          throw new Error('Remote graph requires remoteUrl in configuration');
+        }
+        baseGraph = new MonitoringAiRemoteGraph(settings, {
+          remoteUrl: graphConfig.remoteGraphConfig.remoteUrl,
+          apiKey: graphConfig.remoteGraphConfig.apiKey,
+          timeout: graphConfig.remoteGraphConfig.timeout,
         });
         break;
 
