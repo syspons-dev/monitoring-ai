@@ -2,6 +2,8 @@
 
 Dynamic LangGraph graphs using Azure AI Foundry, designed to be called by Express applications.
 
+> **Version:** 0.1.x | **License:** MIT
+
 ## Overview
 
 This repository contains modular LangGraph workflows that can be invoked via Express API endpoints. Each graph is independently callable and designed for specific AI tasks.
