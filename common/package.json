@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-common",
-  "version": "0.1.4-debug_version-5",
+  "version": "0.1.5",
   "description": "Shared types and utilities for monitoring AI projects",
   "license": "MIT",
   "type": "module",
@@ -26,6 +26,6 @@
     "node": ">=18.0.0"
   },
   "config": {
-    "debug_version": 5
+    "debug_version": 0
   }
 }
