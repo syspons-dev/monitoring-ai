@@ -16,7 +16,8 @@ coverage/
 *.lcov
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/copilot-tools/
 .idea/
 *.swp
 *.swo
