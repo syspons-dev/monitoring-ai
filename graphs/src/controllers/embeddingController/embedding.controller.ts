@@ -16,6 +16,7 @@ import { parseDocument } from './utils/document-loaders.js';
 import { chunkText } from './utils/text-chunking.js';
 import { generateDocumentHash } from './utils/document-hash.js';
 import { EmbeddingRetriever } from './embedding.retriever.js';
+import { Where } from 'chromadb';
 
 /**
  * Configuration options for the EmbeddingController
@@ -249,12 +250,20 @@ export class EmbeddingController {
         if (typeof file.source === 'string') {
           // Check if it's a URL
           if (file.source.startsWith('http://') || file.source.startsWith('https://')) {
-            const response = await fetch(file.source);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch URL: ${file.source} - ${response.statusText}`);
+            try {
+              const response = await fetch(file.source);
+              if (!response.ok) {
+                throw new Error(
+                  `Failed to fetch URL: ${file.source} - Status: ${response.status} ${response.statusText}`
+                );
+              }
+              const arrayBuffer = await response.arrayBuffer();
+              contentBuffer = Buffer.from(arrayBuffer);
+            } catch (error) {
+              throw new Error(
+                `Failed to fetch URL: ${file.source} - ${error instanceof Error ? error.message : String(error)}`
+              );
             }
-            const arrayBuffer = await response.arrayBuffer();
-            contentBuffer = Buffer.from(arrayBuffer);
           } else {
             // It's a file path
             const { readFile } = await import('fs/promises');
@@ -380,53 +389,44 @@ export class EmbeddingController {
     try {
       let results: [Document, number][];
 
+      // Construct where clause, converting string arrays to $in operators
+      let metadataFilter: Where | undefined = options?.metadataFilter as Where | undefined;
+      if (metadataFilter) {
+        metadataFilter = { ...metadataFilter };
+        for (const [key, value] of Object.entries(metadataFilter)) {
+          if (Array.isArray(value)) {
+            (metadataFilter as any)[key] = { $in: value };
+          }
+        }
+      }
+
       // Perform search based on the specified method
       switch (searchMethod) {
         case EmbeddingSearchMethod.similarity:
-          results = await this.vectorStore!.similaritySearchWithScore(
-            query,
-            k,
-            options?.metadataFilter
-          );
+          results = await this.vectorStore!.similaritySearchWithScore(query, k, metadataFilter);
           break;
 
         case EmbeddingSearchMethod.cosine:
           // Chroma uses cosine similarity by default, so this is equivalent to similarity
-          results = await this.vectorStore!.similaritySearchWithScore(
-            query,
-            k,
-            options?.metadataFilter
-          );
+          results = await this.vectorStore!.similaritySearchWithScore(query, k, metadataFilter);
           break;
 
         case EmbeddingSearchMethod.l2:
           // L2 distance search (Euclidean)
-          results = await this.vectorStore!.similaritySearchWithScore(
-            query,
-            k,
-            options?.metadataFilter
-          );
+          results = await this.vectorStore!.similaritySearchWithScore(query, k, metadataFilter);
           break;
 
         case EmbeddingSearchMethod.filtered_similarity:
           // Similarity search with metadata filtering (filter already passed)
-          if (!options?.metadataFilter) {
+          if (!metadataFilter) {
             throw new Error('filtered_similarity requires metadataFilter to be specified');
           }
-          results = await this.vectorStore!.similaritySearchWithScore(
-            query,
-            k,
-            options.metadataFilter
-          );
+          results = await this.vectorStore!.similaritySearchWithScore(query, k, metadataFilter);
           break;
 
         default:
           // Default to similarity search
-          results = await this.vectorStore!.similaritySearchWithScore(
-            query,
-            k,
-            options?.metadataFilter
-          );
+          results = await this.vectorStore!.similaritySearchWithScore(query, k, metadataFilter);
       }
 
       const documents: EmbeddingQueryResult[] = [];

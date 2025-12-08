@@ -1,10 +1,14 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import { StructuredDataAttribute } from '@syspons/monitoring-ai-common';
-import { buildZodSchema } from './schema.js';
+import {
+  StructuredDataAttribute,
+  StructuredDataAttributeType,
+} from '@syspons/monitoring-ai-common';
+import { buildZodSchema, addZodAttribute } from './schema.js';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import { MonitoringAiPrompt } from './prompts.js';
 import { EmbeddingController, createRetrieverTool } from '../index.js';
+import { z } from 'zod';
 
 // ============================================================================
 // Model Invocation Types
@@ -81,6 +85,15 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
   if (structuredDataAttributes && structuredDataAttributes.length > 0) {
     // Build Zod schema from structured data attributes
     const zodSchema = buildZodSchema(structuredDataAttributes);
+    // Always add __message field for additional context
+    addZodAttribute(
+      zodSchema,
+      '__message',
+      StructuredDataAttributeType.string,
+      'Additional message or explanation from the assistant',
+      true
+    );
+    const defaultAiMessage = 'Structured data response';
 
     // Use withStructuredOutput to get structured data
     const modelWithStructure = model.withStructuredOutput(zodSchema);
@@ -88,7 +101,9 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
 
     // Return both structured data and a message representation
     return {
-      response: new AIMessage(JSON.stringify(structuredData, null, 2)),
+      response: new AIMessage(
+        structuredData.__message ? structuredData.__message : defaultAiMessage
+      ),
       structuredData: structuredData as Record<string, any>,
     };
   }

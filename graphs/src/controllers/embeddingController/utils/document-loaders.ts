@@ -1,4 +1,4 @@
-import { DocumentType } from '@syspons/monitoring-ai-common';
+import { MonitoringAiDocumentType } from '@syspons/monitoring-ai-common';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
@@ -11,7 +11,10 @@ import * as XLSX from 'xlsx';
 /**
  * Parse document based on type and return text content using LangChain loaders
  */
-export async function parseDocument(source: Buffer | string, type: DocumentType): Promise<string> {
+export async function parseDocument(
+  source: Buffer | string,
+  type: MonitoringAiDocumentType
+): Promise<string> {
   let filePath: string;
   let isTemporary = false;
 
@@ -37,26 +40,26 @@ export async function parseDocument(source: Buffer | string, type: DocumentType)
     let text: string;
 
     switch (type) {
-      case DocumentType.pdf:
+      case MonitoringAiDocumentType.pdf:
         text = await parsePDF(filePath, isTemporary);
         break;
-      case DocumentType.docx:
+      case MonitoringAiDocumentType.docx:
         text = await parseDOCX(filePath);
         break;
-      case DocumentType.csv:
+      case MonitoringAiDocumentType.csv:
         text = await parseCSV(filePath);
         break;
-      case DocumentType.json:
+      case MonitoringAiDocumentType.json:
         text = await parseJSON(filePath);
         break;
-      case DocumentType.txt:
-      case DocumentType.md:
+      case MonitoringAiDocumentType.txt:
+      case MonitoringAiDocumentType.md:
         text = await parseTXT(filePath);
         break;
-      case DocumentType.html:
+      case MonitoringAiDocumentType.html:
         text = await parseHTML(filePath);
         break;
-      case DocumentType.xlsx:
+      case MonitoringAiDocumentType.xlsx:
         // XLSX not directly supported by LangChain, fallback to manual parsing
         text = await parseXLSX(source as Buffer);
         break;
@@ -198,37 +201,37 @@ async function parseXLSX(source: Buffer | string): Promise<string> {
 /**
  * Get appropriate file extension for document type
  */
-export function getFileExtension(type: DocumentType): string {
+export function getFileExtension(type: MonitoringAiDocumentType): string {
   return type;
 }
 
 /**
  * Detect document type from file extension
  */
-export function detectDocumentType(filename: string): DocumentType | null {
+export function detectDocumentType(filename: string): MonitoringAiDocumentType | null {
   const ext = filename.toLowerCase().split('.').pop();
 
   switch (ext) {
     case 'pdf':
-      return DocumentType.pdf;
+      return MonitoringAiDocumentType.pdf;
     case 'docx':
     case 'doc':
-      return DocumentType.docx;
+      return MonitoringAiDocumentType.docx;
     case 'xlsx':
     case 'xls':
-      return DocumentType.xlsx;
+      return MonitoringAiDocumentType.xlsx;
     case 'csv':
-      return DocumentType.csv;
+      return MonitoringAiDocumentType.csv;
     case 'txt':
-      return DocumentType.txt;
+      return MonitoringAiDocumentType.txt;
     case 'md':
     case 'markdown':
-      return DocumentType.md;
+      return MonitoringAiDocumentType.md;
     case 'json':
-      return DocumentType.json;
+      return MonitoringAiDocumentType.json;
     case 'html':
     case 'htm':
-      return DocumentType.html;
+      return MonitoringAiDocumentType.html;
     default:
       return null;
   }

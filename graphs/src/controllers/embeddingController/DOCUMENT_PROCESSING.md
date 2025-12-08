@@ -65,7 +65,7 @@ Groups paragraphs together up to the maximum chunk size.
 ```typescript
 import { readFile } from 'fs/promises';
 import { EmbeddingController } from '@syspons/monitoring-ai-graphs';
-import { DocumentType, ChunkingStrategy } from '@syspons/monitoring-ai-common';
+import { MonitoringAiDocumentType, ChunkingStrategy } from '@syspons/monitoring-ai-common';
 import { AzureOpenAIEmbeddings } from '@langchain/openai';
 
 const controller = new EmbeddingController();
@@ -81,7 +81,7 @@ const pdfBuffer = await readFile('./manual.pdf');
 const chunksAdded = await controller.addDocumentsFromFiles([
   {
     source: pdfBuffer,
-    type: DocumentType.pdf,
+    type: MonitoringAiDocumentType.pdf,
     metadata: { category: 'manual', version: '1.0' },
     idPrefix: 'manual_v1'
   }
@@ -96,17 +96,17 @@ console.log(`Added ${chunksAdded} document chunks`);
 const files = [
   {
     source: await readFile('./doc1.pdf'),
-    type: DocumentType.pdf,
+    type: MonitoringAiDocumentType.pdf,
     metadata: { category: 'technical', author: 'John' }
   },
   {
     source: await readFile('./data.xlsx'),
-    type: DocumentType.xlsx,
+    type: MonitoringAiDocumentType.xlsx,
     metadata: { category: 'data', year: 2024 }
   },
   {
     source: './readme.md', // Can also use file paths
-    type: DocumentType.md,
+    type: MonitoringAiDocumentType.md,
     metadata: { category: 'documentation' }
   }
 ];
@@ -126,7 +126,7 @@ await controller.addDocumentsFromFiles(
   [
     {
       source: await readFile('./book.pdf'),
-      type: DocumentType.pdf,
+      type: MonitoringAiDocumentType.pdf,
       metadata: { type: 'book', title: 'AI Handbook' },
       idPrefix: 'ai_handbook'
     }

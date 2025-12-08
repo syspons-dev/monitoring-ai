@@ -12,6 +12,7 @@ export enum StructuredDataAttributeType {
 }
 
 export interface StructuredDataAttribute {
+  id: string;
   name: string;
   type: StructuredDataAttributeType;
   enabled: boolean;

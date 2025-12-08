@@ -108,5 +108,7 @@ export function formatMessagesForDisplay(
     }
   }
 
-  return displayMessages;
+  return displayMessages.sort((a, b) =>
+    a.timestamp && b.timestamp ? a.timestamp.getTime() - b.timestamp.getTime() : 0
+  );
 }

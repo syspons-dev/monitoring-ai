@@ -88,7 +88,10 @@ export const SEARCH_STRICTNESS_LEVELS: Record<SearchStrictness, SearchStrictness
 /**
  * Metadata type compatible with ChromaDB
  */
-export type EmbeddingMetadata = Record<string, string | number | boolean>;
+export type EmbeddingMetadata = {
+  filename?: string | number | boolean | string[];
+  [key: string]: string | number | boolean | string[] | undefined;
+};
 
 /**
  * Behavior when duplicate documents are detected
@@ -107,7 +110,7 @@ export enum DuplicateHandling {
 /**
  * Supported document types for parsing and vectorization
  */
-export enum DocumentType {
+export enum MonitoringAiDocumentType {
   pdf = 'pdf',
   docx = 'docx',
   xlsx = 'xlsx',
@@ -125,7 +128,7 @@ export interface DocumentFileInput {
   /** File buffer, local file path, or URL */
   source: Buffer | string;
   /** Document type */
-  type: DocumentType;
+  type: MonitoringAiDocumentType;
   /** Optional custom metadata to attach */
   metadata?: EmbeddingMetadata;
   /** Optional custom ID prefix */
