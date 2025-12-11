@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-graphs",
-  "version": "0.1.4-debug_version-34",
+  "version": "0.1.4-debug_version-35",
   "description": "LangGraph implementations for monitoring AI workflows",
   "license": "MIT",
   "type": "module",
@@ -49,6 +49,6 @@
     "node": ">=18.0.0"
   },
   "config": {
-    "debug_version": 34
+    "debug_version": 35
   }
 }

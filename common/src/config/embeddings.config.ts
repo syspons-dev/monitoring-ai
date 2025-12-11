@@ -16,7 +16,7 @@ export enum MonitoringAiVectorStoreProvider {
   milvus = 'milvus',
 }
 
-export interface MonitoringEmbeddingConfig {
+export interface MonitoringAiEmbeddingConfig {
   /** Vector store service to use */
   vectorStoreProvider: MonitoringAiVectorStoreProvider;
   /** URL of the vector store service */

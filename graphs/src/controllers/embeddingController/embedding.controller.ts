@@ -341,13 +341,18 @@ export class EmbeddingController {
       }
 
       if (allDocuments.length === 0) {
+        // No new documents to add
         return { added: 0, skipped: skippedCount, replaced: replacedCount };
       }
 
       // Add all documents to the vector store
       await this.addDocuments(allDocuments);
 
-      return { added: allDocuments.length, skipped: skippedCount, replaced: replacedCount };
+      return {
+        added: allDocuments.length,
+        skipped: skippedCount,
+        replaced: replacedCount,
+      };
     } catch (error) {
       throw new Error(
         `Failed to add documents from files: ${error instanceof Error ? error.message : String(error)}`
