@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-graphs",
-  "version": "0.1.4-debug_version-35",
+  "version": "0.1.8",
   "description": "LangGraph implementations for monitoring AI workflows",
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,7 @@
     "@langchain/langgraph": "^1.0.2",
     "@langchain/langgraph-cli": "1.0.3",
     "@langchain/openai": "^1.1.2",
-    "@syspons/monitoring-ai-common": "^0.1.5",
+    "@syspons/monitoring-ai-common": "^0.1.8",
     "cheerio": "^1.1.0",
     "chromadb": "^3.1.6",
     "csv-parse": "^6.1.0",
@@ -49,6 +49,6 @@
     "node": ">=18.0.0"
   },
   "config": {
-    "debug_version": 35
+    "debug_version": 0
   }
 }
