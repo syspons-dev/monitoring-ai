@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-graphs",
-  "version": "0.2.0-debug_version-85",
+  "version": "0.2.1",
   "description": "LangGraph implementations for monitoring AI workflows",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,7 @@
     "chroma:stop": "pkill -f 'chroma run' || true"
   },
   "dependencies": {
-    "@syspons/monitoring-ai-common": "^0.2.0",
+    "@syspons/monitoring-ai-common": "^0.2.1",
     "cheerio": "^1.1.0",
     "chromadb": "^3.1.6",
     "csv-parse": "^6.1.0",
@@ -70,6 +70,6 @@
     "node": ">=18.0.0"
   },
   "config": {
-    "debug_version": 85
+    "debug_version": 0
   }
 }
