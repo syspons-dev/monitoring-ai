@@ -6,7 +6,6 @@ export interface MonitoringAiModelSettings {
   MODEL_MAX_TOKENS?: string;
   MODEL_REQUEST_TIMEOUT?: string;
   MODEL_MAX_RETRIES?: string;
-  MODEL_CONNECT_TIMEOUT?: string;
 }
 
 export interface MonitoringAiSettingsConfig {
@@ -17,7 +16,6 @@ const DEFAULT_SETTINGS = {
   MODEL_MAX_TOKENS: '4096',
   MODEL_REQUEST_TIMEOUT: '30000',
   MODEL_MAX_RETRIES: '3',
-  MODEL_CONNECT_TIMEOUT: '10000',
 } as const;
 
 export class MonitoringGraphSettings {
@@ -28,7 +26,6 @@ export class MonitoringGraphSettings {
   readonly MODEL_MAX_TOKENS: string;
   readonly MODEL_REQUEST_TIMEOUT: string;
   readonly MODEL_MAX_RETRIES: string;
-  readonly MODEL_CONNECT_TIMEOUT: string;
 
   constructor(config: MonitoringAiSettingsConfig) {
     // Set Model Settings
@@ -42,7 +39,5 @@ export class MonitoringGraphSettings {
       config.modelSettings.MODEL_REQUEST_TIMEOUT ?? DEFAULT_SETTINGS.MODEL_REQUEST_TIMEOUT;
     this.MODEL_MAX_RETRIES =
       config.modelSettings.MODEL_MAX_RETRIES ?? DEFAULT_SETTINGS.MODEL_MAX_RETRIES;
-    this.MODEL_CONNECT_TIMEOUT =
-      config.modelSettings.MODEL_CONNECT_TIMEOUT ?? DEFAULT_SETTINGS.MODEL_CONNECT_TIMEOUT;
   }
 }

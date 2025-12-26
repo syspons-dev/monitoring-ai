@@ -1,4 +1,5 @@
-import type { MonitoringAiMessage } from '../types/message.types.js';
+import type { Citation, MonitoringAiMessage } from '../types/message.types.js';
+import { MonitoringAiNodeUsageEntry } from '../types/tokens.types.js';
 
 export interface VectorStoreDataSource {
   type: 'vector_store';
@@ -13,4 +14,8 @@ export interface MonitoringAiBaseGraphStateType {
   metadata?: Record<string, any>;
   // Structured data that can be used for further processing
   structuredData?: Record<string, any>;
+  // Citations from retriever tool calls during RAG operations
+  citations?: Citation[];
+  // Detailed breakdown of token usage per node execution (sum for total)
+  usagePerNode?: MonitoringAiNodeUsageEntry[];
 }

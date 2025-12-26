@@ -10,13 +10,16 @@ import {
   DocumentFileInput,
   DuplicateHandling,
   AddDocumentsFromFilesOptions,
+  MonitoringAiNodeUsageEntry,
 } from '@syspons/monitoring-ai-common';
+import { encoding_for_model, type Tiktoken } from 'tiktoken';
+import { Where } from 'chromadb';
 
 import { parseDocument } from './utils/document-loaders.js';
 import { chunkText } from './utils/text-chunking.js';
 import { generateDocumentHash } from './utils/document-hash.js';
 import { EmbeddingRetriever } from './embedding.retriever.js';
-import { Where } from 'chromadb';
+import { TokensController } from '../tokensController/tokensController.js';
 
 /**
  * Configuration options for the EmbeddingController
@@ -35,6 +38,8 @@ export interface EmbeddingConfig {
   collectionMetadata?: EmbeddingMetadata;
   /** Optional default query options for searches */
   retrieverOptions?: MonitoringAiEmbeddingQueryOptions;
+  /** Optional embedding model name for token counting (e.g., 'text-embedding-ada-002') */
+  embeddingModelName?: string;
 }
 
 /**
@@ -125,6 +130,9 @@ export class EmbeddingController {
   private defaultChromaServerUrl = 'http://localhost:8000';
 
   private retrieverOptions: MonitoringAiEmbeddingQueryOptions | undefined;
+  private tokensController: TokensController | undefined;
+  private encoding: Tiktoken | null = null;
+  private embeddingModelName: string | undefined;
 
   // ============================================================================
   // Lifecycle Methods
@@ -138,6 +146,23 @@ export class EmbeddingController {
     try {
       this.config = config;
       this.retrieverOptions = config.retrieverOptions;
+      this.embeddingModelName = config.embeddingModelName;
+
+      this.tokensController = new TokensController(
+        config.embeddingModelName || 'text-embedding-ada-002'
+      );
+
+      // Initialize tiktoken encoding if model name provided
+      if (this.embeddingModelName) {
+        try {
+          this.encoding = encoding_for_model(this.embeddingModelName as any);
+        } catch (error) {
+          console.warn(
+            `Failed to load encoding for ${this.embeddingModelName}, falling back to cl100k_base`
+          );
+          this.encoding = encoding_for_model('text-embedding-ada-002');
+        }
+      }
 
       // Initialize Chroma vector store with LangChain integration
       // Ensure URL is not empty - use default if chromaServerUrl is falsy or empty string
@@ -169,10 +194,18 @@ export class EmbeddingController {
   async close(): Promise<void> {
     if (this.isInitialized) {
       try {
+        // Free encoding resources
+        if (this.encoding) {
+          this.encoding.free();
+          this.encoding = null;
+        }
+
         // Reset state - ChromaDB handles persistence automatically
         this.isInitialized = false;
         this.vectorStore = null;
         this.config = null;
+        this.tokensController = undefined;
+        this.embeddingModelName = undefined;
       } catch (error) {
         throw new Error(
           `Failed to close EmbeddingController: ${error instanceof Error ? error.message : String(error)}`
@@ -198,6 +231,19 @@ export class EmbeddingController {
 
     try {
       const ids = documents.map((doc, index) => doc.id || `doc_${Date.now()}_${index}`);
+
+      // Record token usage if tracking is enabled
+      if (this.tokensController) {
+        const totalTokens = this.tokensController.countTokens(
+          documents.map((d) => d.content),
+          this.encoding
+        );
+        this.tokensController.recordUsage('embedding', 'addDocuments', {
+          input_tokens: totalTokens,
+          output_tokens: 0,
+          total_tokens: totalTokens,
+        });
+      }
 
       // Convert to LangChain Document format
       const langchainDocs = documents.map(
@@ -226,7 +272,11 @@ export class EmbeddingController {
   async addDocumentsFromFiles(
     files: DocumentFileInput[],
     options?: AddDocumentsFromFilesOptions
-  ): Promise<{ added: number; skipped: number; replaced: number }> {
+  ): Promise<{
+    added: number;
+    skipped: number;
+    replaced: number;
+  }> {
     this.ensureInitialized();
 
     if (!files || files.length === 0) {
@@ -376,6 +426,16 @@ export class EmbeddingController {
 
     if (!query || query.trim().length === 0) {
       throw new Error('Query cannot be empty');
+    }
+
+    // Record token usage for query if tracking is enabled
+    if (this.tokensController) {
+      const queryTokens = this.tokensController.countTokens([query], this.encoding);
+      this.tokensController.recordUsage('embedding', 'queryDocuments', {
+        input_tokens: queryTokens,
+        output_tokens: 0,
+        total_tokens: queryTokens,
+      });
     }
 
     const k = options?.maxResults || 4;
@@ -661,5 +721,19 @@ export class EmbeddingController {
 
   getRetrieverOptions(): MonitoringAiEmbeddingQueryOptions | undefined {
     return this.retrieverOptions;
+  }
+
+  /**
+   * Get all usage entries from the internal tokens controller
+   */
+  getUsageEntries(): MonitoringAiNodeUsageEntry[] {
+    return this.tokensController?.getUsageEntries() || [];
+  }
+
+  /**
+   * Clear all usage entries from the internal tokens controller
+   */
+  clearUsageEntries(): void {
+    this.tokensController?.clearUsageEntries();
   }
 }

@@ -4,6 +4,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import {
   MonitoringAiBaseGraphStateType,
   MonitoringAiDataFlowConfig,
+  MonitoringAiNodeUsageEntry,
 } from '@syspons/monitoring-ai-common';
 
 import { MonitoringAiBaseGraphState } from '../types/index.js';
@@ -13,6 +14,7 @@ import {
   convertToLangChainMessages,
   convertFromLangChainMessages,
 } from '../utils/message-converter.js';
+import { TokensController } from '../controllers/tokensController/tokensController.js';
 
 export interface MonitoringAiBaseGraphInvokeParams {
   state: MonitoringAiBaseGraphStateType;
@@ -29,6 +31,7 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
   dataFlowConfig?: MonitoringAiDataFlowConfig;
 
   embeddingController: EmbeddingController;
+  tokensController: TokensController;
 
   // Enable debug console logs (default: false)
   debug: boolean = false;
@@ -48,6 +51,7 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
     });
 
     this.embeddingController = new EmbeddingController();
+    this.tokensController = new TokensController(this.settings.MODEL_NAME);
   }
 
   async invokeGraph(
@@ -70,11 +74,31 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
         messages: langchainMessages,
       } as unknown as T);
 
+      // Collect usage entries from both controllers
+      const graphUsageEntries = this.tokensController.getUsageEntries();
+      const embeddingUsageEntries = this.embeddingController.getUsageEntries();
+
+      // Merge with existing usagePerNode from graph result
+      const resultUsagePerNode =
+        'usagePerNode' in result
+          ? (result.usagePerNode as MonitoringAiNodeUsageEntry[] | undefined)
+          : undefined;
+      const allUsageEntries = [
+        ...(resultUsagePerNode || []),
+        ...graphUsageEntries,
+        ...embeddingUsageEntries,
+      ];
+
+      // Clear controllers for next invocation
+      this.tokensController.clearUsageEntries();
+      this.embeddingController.clearUsageEntries();
+
       // Convert result back to MonitoringAiMessage[]
       const resultMessages = (result as any).messages;
       return {
         ...result,
         messages: convertFromLangChainMessages(resultMessages),
+        usagePerNode: allUsageEntries,
       } as MonitoringAiBaseGraphStateType;
     } catch (error) {
       throw new Error(

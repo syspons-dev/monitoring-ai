@@ -1,14 +1,16 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import {
+  Citation,
+  MonitoringAiNodeUsageEntry,
   StructuredDataAttribute,
   StructuredDataAttributeType,
 } from '@syspons/monitoring-ai-common';
 import { buildZodSchema, addZodAttribute } from './schema.js';
 import type { StructuredToolInterface } from '@langchain/core/tools';
+
 import { MonitoringAiPrompt } from './prompts.js';
-import { EmbeddingController, createRetrieverTool } from '../index.js';
-import { z } from 'zod';
+import { EmbeddingController, TokensController, createRetrieverTool } from '../index.js';
 
 // ============================================================================
 // Model Invocation Types
@@ -24,6 +26,10 @@ export interface BaseInvokeParams {
   messages: BaseMessage[];
   /** Optional structured data attributes to apply as schema */
   structuredDataAttributes?: StructuredDataAttribute[];
+  /** Optional token controller for usage tracking */
+  tokensController: TokensController;
+  /** Optional node name for usage tracking */
+  nodeName?: string;
   /** Enable debug console logs (default: false) */
   debug?: boolean;
 }
@@ -41,6 +47,8 @@ export interface BaseInvokeResult {
   response: AIMessage;
   /** Structured data extracted from the response (only present when schema provided) */
   structuredData?: Record<string, any>;
+  /** Per-node usage tracking entry (only present when nodeName provided) */
+  usagePerNode?: MonitoringAiNodeUsageEntry[];
 }
 
 /**
@@ -79,7 +87,7 @@ export interface InvokeModelResult extends BaseInvokeResult {}
  * console.log(result.response.content); // "Hello! How can I help you?"
  */
 export async function invokeModel(params: InvokeModelParams): Promise<InvokeModelResult> {
-  const { model, messages, structuredDataAttributes } = params;
+  const { model, messages, structuredDataAttributes, nodeName, tokensController } = params;
 
   // Check if we should use structured output
   if (structuredDataAttributes && structuredDataAttributes.length > 0) {
@@ -96,22 +104,30 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
     const defaultAiMessage = 'Structured data response';
 
     // Use withStructuredOutput to get structured data
-    const modelWithStructure = model.withStructuredOutput(zodSchema);
-    const structuredData = await modelWithStructure.invoke(messages);
+    const modelWithStructure = model.withStructuredOutput(zodSchema, { includeRaw: true });
+    const result = await modelWithStructure.invoke(messages);
 
     // Return both structured data and a message representation
+    const usageMetadata = (result.raw as AIMessage).usage_metadata;
     return {
-      response: new AIMessage(
-        structuredData.__message ? structuredData.__message : defaultAiMessage
-      ),
-      structuredData: structuredData as Record<string, any>,
+      response: new AIMessage(result.parsed.__message ? result.parsed.__message : defaultAiMessage),
+      structuredData: result.parsed as Record<string, any>,
+      usagePerNode:
+        nodeName && usageMetadata
+          ? [tokensController.createUsageEntry(nodeName, 'invokeModel', usageMetadata)]
+          : undefined,
     };
   }
 
   // Default behavior: plain model invocation
   const response = await model.invoke(messages);
+  const usageMetadata = response.usage_metadata;
   return {
     response: new AIMessage(response),
+    usagePerNode:
+      nodeName && usageMetadata
+        ? [tokensController.createUsageEntry(nodeName, 'invokeModel', usageMetadata)]
+        : undefined,
   };
 }
 
@@ -137,6 +153,8 @@ export interface InvokeAgentParams extends BaseInvokeParams {
 export interface InvokeAgentResult extends BaseInvokeResult {
   /** All messages from the agent conversation */
   messages: BaseMessage[];
+  /** Citations extracted from retriever tool calls (only present when retriever is used) */
+  citations?: Citation[];
 }
 
 // ============================================================================
@@ -182,18 +200,128 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
     additionalTools = [],
     structuredDataAttributes,
     debug = false,
+    tokensController,
+    nodeName,
   } = params;
   const systemPrompt = params.systemPrompt?.prompt;
+
+  // ============================================================================
+  // Citation Tracking
+  // ============================================================================
+
+  const citations: Citation[] = [];
+  let citationIdCounter = 0;
+  const RETRIEVER_TOOL_NAME = 'search_knowledge_base';
+  // Track citations from current iteration to link with next AI message
+  let pendingCitations: Citation[] = [];
+
+  // ============================================================================
+  // Token Usage Tracking
+  // ============================================================================
+
+  const usageEntries: MonitoringAiNodeUsageEntry[] = [];
 
   // ============================================================================
   // Inner Functions
   // ============================================================================
 
   /**
+   * Track usage metadata from model response
+   */
+  function trackUsage(response: AIMessage, iteration?: number): void {
+    if (nodeName && response.usage_metadata && tokensController) {
+      const entry = tokensController.createUsageEntry(
+        nodeName,
+        'invokeAgent',
+        response.usage_metadata,
+        iteration
+      );
+      usageEntries.push(entry);
+      if (debug) {
+        console.log(
+          `[invokeAgent] Tracked usage for ${nodeName}${iteration ? ` iteration ${iteration}` : ''}: ${response.usage_metadata.total_tokens} tokens`
+        );
+      }
+    }
+  }
+
+  /**
    * Build message array with optional system prompt
    */
   function buildMessages(systemPrompt: string | undefined, messages: BaseMessage[]): BaseMessage[] {
     return systemPrompt ? [new SystemMessage(systemPrompt), ...messages] : [...messages];
+  }
+
+  /**
+   * Extract citations from retriever tool result
+   * Citations are stored as pending and will be linked to the next AI message
+   * Deduplicates based on content and filename to avoid duplicate citations
+   */
+  function extractCitations(toolName: string, toolResult: any, iteration: number): void {
+    // Only process retriever tool calls
+    if (toolName !== RETRIEVER_TOOL_NAME) {
+      return;
+    }
+
+    try {
+      // Parse the JSON response from retriever tool
+      const docs = typeof toolResult === 'string' ? JSON.parse(toolResult) : toolResult;
+
+      // Add each retrieved document as a pending citation (with deduplication)
+      if (Array.isArray(docs)) {
+        for (const doc of docs) {
+          // Check if citation already exists globally (by content and filename)
+          const exists = citations.some(
+            (c) => c.content === doc.content && c.metadata.filename === doc.metadata?.filename
+          );
+
+          if (!exists) {
+            const citation: Citation = {
+              id: citationIdCounter++,
+              content: doc.content,
+              metadata: doc.metadata || {},
+              usedInIteration: iteration,
+              // usedByMessageId will be set when the next AI message is created
+            };
+
+            // Store as pending to be linked with next AI message
+            pendingCitations.push(citation);
+            citations.push(citation);
+
+            if (debug) {
+              console.log(
+                `[invokeAgent] Added pending citation #${citation.id}: ${doc.metadata?.filename || 'unknown'}`
+              );
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore parse errors (might be error message string from retriever)
+      if (debug) {
+        console.warn('[invokeAgent] Failed to parse citations from tool result:', error);
+      }
+    }
+  }
+
+  /**
+   * Link pending citations to the AI message that used them
+   */
+  function linkPendingCitations(messageId: string): void {
+    if (pendingCitations.length > 0) {
+      for (const citation of pendingCitations) {
+        citation.usedByMessageId = messageId;
+      }
+
+      if (debug) {
+        console.log(
+          `[invokeAgent] Linked ${pendingCitations.length} citations to message ${messageId}`
+        );
+      }
+
+      // Clear pending citations
+      pendingCitations = [];
+    }
   }
 
   /**
@@ -230,12 +358,16 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
         messages: outputMessages,
         response: new AIMessage(JSON.stringify(structuredData, null, 2)),
         structuredData,
+        citations: citations.length > 0 ? citations : undefined,
+        usagePerNode: usageEntries.length > 0 ? usageEntries : undefined,
       };
     }
 
     return {
       messages: outputMessages,
       response: new AIMessage(response),
+      citations: citations.length > 0 ? citations : undefined,
+      usagePerNode: usageEntries.length > 0 ? usageEntries : undefined,
     };
   }
 
@@ -245,7 +377,8 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
   async function executeToolCall(
     toolCall: any,
     tools: StructuredToolInterface[],
-    messages: BaseMessage[]
+    messages: BaseMessage[],
+    iteration: number
   ): Promise<void> {
     const tool = tools.find((t) => t.name === toolCall.name);
 
@@ -260,6 +393,10 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
 
     try {
       const toolResult = await tool.invoke(toolCall.args);
+
+      // Extract citations if this is the retriever tool
+      extractCitations(toolCall.name, toolResult, iteration);
+
       messages.push({
         role: 'tool',
         content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
@@ -305,13 +442,18 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
         messages: [new AIMessage(JSON.stringify(structuredData, null, 2))],
         response: new AIMessage(JSON.stringify(structuredData, null, 2)),
         structuredData,
+        citations: undefined, // No tools means no citations
+        usagePerNode: usageEntries.length > 0 ? usageEntries : undefined,
       };
     }
 
     const response = await model.invoke(allMessages);
+    trackUsage(response);
     return {
       messages: [response],
       response: new AIMessage(response),
+      citations: undefined, // No tools means no citations
+      usagePerNode: usageEntries.length > 0 ? usageEntries : undefined,
     };
   }
 
@@ -325,21 +467,31 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
 
     // Invoke model with tools
     const response = await modelWithTools.invoke(allMessages);
+    trackUsage(response, iteration);
     allMessages.push(response);
 
     // Check if model wants to use tools
     if (!response.tool_calls || response.tool_calls.length === 0) {
-      // No more tool calls, we're done
+      // No more tool calls, link any pending citations to this final message
+      if (response.id) {
+        linkPendingCitations(response.id);
+      }
       return createResult(allMessages, response, !!systemPrompt);
     }
 
-    // Execute all tool calls
+    // Execute all tool calls (this may add pending citations)
     for (const toolCall of response.tool_calls) {
-      await executeToolCall(toolCall, tools, allMessages);
+      await executeToolCall(toolCall, tools, allMessages, iteration);
     }
+
+    // After tool execution, the next AI message will use any citations that were just extracted
+    // We'll link them after the next model invocation
   }
 
-  // Max iterations reached, return what we have
+  // Max iterations reached, link any pending citations to the last message
   const finalMessage = allMessages[allMessages.length - 1];
+  if (finalMessage.id) {
+    linkPendingCitations(finalMessage.id);
+  }
   return createResult(allMessages, finalMessage, !!systemPrompt);
 }

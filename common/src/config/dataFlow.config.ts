@@ -19,8 +19,11 @@ export interface StructuredDataAttribute {
   description?: string;
   required?: boolean;
   itemsType?: StructuredDataAttributeType; // Array items type definition
+  reasoningAttributeKey?: string; // Key to link reasoning data
 }
 
 export interface MonitoringAiDataFlowConfig {
   structuredDataAttributes: StructuredDataAttribute[];
 }
+
+export const MonitoringAiStructureDataReasoningIndicator = '__reasoning';

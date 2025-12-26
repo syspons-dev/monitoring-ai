@@ -2,19 +2,16 @@ import {
   MonitoringAiBaseGraphStateType,
   MonitoringAiDataFlowConfig,
   MonitoringAiGraphs,
+  MonitoringAiModelConfig,
   MonitoringAiWorkflowConfig,
 } from '@syspons/monitoring-ai-common';
 import { MonitoringAiChatGraph, MonitoringAiRemoteGraph, MonitoringAiBaseGraph } from './index.js';
-import {
-  EmbeddingController,
-  MonitoringAiModelSettings,
-  MonitoringGraphSettings,
-} from '../index.js';
+import { EmbeddingController, MonitoringGraphSettings } from '../index.js';
 
 export interface MonitoringAiGraphsProcessorParams {
   graphConfig: MonitoringAiWorkflowConfig;
   dataflowConfig?: MonitoringAiDataFlowConfig;
-  modelParams: MonitoringAiModelSettings;
+  modelParams: MonitoringAiModelConfig;
   state: MonitoringAiBaseGraphStateType;
   embeddingController?: EmbeddingController;
   debug?: boolean;
@@ -73,7 +70,7 @@ class MonitoringAiGraphsProcessor {
     if (!graphConfig.monitoringAiGraph) {
       throw new Error('Graph not specified');
     }
-    if (!modelParams || !modelParams.MODEL_API_KEY || !modelParams.MODEL_BASE_URL) {
+    if (!modelParams || !modelParams.apiKey || !modelParams.endpoint) {
       throw new Error('Model parameters are invalid or missing');
     }
   }
@@ -85,7 +82,15 @@ class MonitoringAiGraphsProcessor {
 
     // Initialize settings
     const settings: MonitoringGraphSettings = new MonitoringGraphSettings({
-      modelSettings: modelParams,
+      modelSettings: {
+        MODEL_NAME: modelParams.deployment,
+        MODEL_BASE_URL: modelParams.endpoint,
+        MODEL_API_KEY: modelParams.apiKey,
+        MODEL_API_VERSION: modelParams.apiVersion,
+        MODEL_MAX_TOKENS: modelParams.maxTokens.toString(),
+        MODEL_REQUEST_TIMEOUT: modelParams.modelRequestTimeout.toString(),
+        MODEL_MAX_RETRIES: modelParams.modelMaxRetries.toString(),
+      },
     });
 
     // Initialize the appropriate graph

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  MonitoringAiStructureDataReasoningIndicator,
   StructuredDataAttribute,
   StructuredDataAttributeType,
 } from '@syspons/monitoring-ai-common';

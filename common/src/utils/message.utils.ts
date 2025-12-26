@@ -1,4 +1,4 @@
-import type { MonitoringAiMessage } from '../types/message.types.js';
+import type { Citation, MonitoringAiMessage } from '../types/message.types.js';
 
 /**
  * Display message for client UIs
@@ -8,6 +8,7 @@ export interface MonitoringAiDisplayMessage {
   content: string;
   toolsUsed?: string[];
   timestamp?: Date;
+  citations?: Citation[];
 }
 
 /**
@@ -46,9 +47,10 @@ export function getDisplayableMessages(messages: MonitoringAiMessage[]): Monitor
 /**
  * Formats messages for display in client UIs with enhanced metadata.
  * Tracks which tools were used and provides clean role-based formatting.
+ * Extracts citations from messages for display.
  *
- * @param messages - Array of messages to format
- * @returns Array of formatted display messages
+ * @param messages - Array of messages to format (with citations in message.citations)
+ * @returns Array of formatted display messages with citations
  *
  * @example
  * ```typescript
@@ -56,12 +58,15 @@ export function getDisplayableMessages(messages: MonitoringAiMessage[]): Monitor
  * const formatted = formatMessagesForDisplay(result.messages);
  *
  * formatted.forEach(msg => {
- *   if (msg.role === 'user') {
+ *   if (msg.type === 'human') {
  *     ui.addUserMessage(msg.content);
  *   } else {
  *     ui.addAssistantMessage(msg.content);
  *     if (msg.toolsUsed?.length) {
  *       ui.addIndicator(`🔍 Used: ${msg.toolsUsed.join(', ')}`);
+ *     }
+ *     if (msg.citations?.length) {
+ *       ui.addCitations(msg.citations);
  *     }
  *   }
  * });
@@ -100,6 +105,7 @@ export function formatMessagesForDisplay(
           content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
           toolsUsed: currentToolsUsed.length > 0 ? [...currentToolsUsed] : undefined,
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+          citations: msg.citations && msg.citations.length > 0 ? msg.citations : undefined,
         });
 
         // Reset tools tracker

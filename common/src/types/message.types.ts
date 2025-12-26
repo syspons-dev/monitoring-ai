@@ -16,40 +16,37 @@ export interface MonitoringAiMessage {
   response_metadata?: Record<string, any>;
   // Timestamp of the message (optional)
   timestamp?: Date | string;
-  // Chat Extensions context (optional)
-  context?: ChatExtensionsMessageContextOutput[];
+  // Citations from retriever tool during RAG operations (optional)
+  citations?: Citation[];
 }
 
 export type AiMessageType = 'ai' | 'human' | 'tool' | 'system';
 
-// Copy of Azure types since import wont work in current ts settings
-
-export interface ChatExtensionsMessageContextOutput {
-  /**
-   * The contextual information associated with the Azure chat extensions used for a chat completions request.
-   * These messages describe the data source retrievals, plugin invocations, and other intermediate steps taken in the
-   * course of generating a chat completions response that was augmented by capabilities from Azure OpenAI chat
-   * extensions.
-   */
-  citations?: ChatExtensionDataSourceResponseCitationOutput[];
-  /** The detected intent from the chat history, used to pass to the next turn to carry over the context. */
-  intent?: string;
-}
-
 /**
- * A single instance of additional context information available when Azure OpenAI chat extensions are involved
- * in the generation of a corresponding chat completions response. This context information is only populated when
- * using an Azure OpenAI request configured to use a matching extension.
+ * Citation extracted from retriever tool during RAG operations
  */
-export interface ChatExtensionDataSourceResponseCitationOutput {
-  /** The content of the citation. */
+export interface Citation {
+  /** Unique identifier for this citation */
+  id: number;
+  /** The actual text content retrieved from the document */
   content: string;
-  /** The title of the citation. */
-  title?: string;
-  /** The URL of the citation. */
-  url?: string;
-  /** The file path of the citation. */
-  filepath?: string;
-  /** The chunk ID of the citation. */
-  chunk_id?: string;
+  /** Metadata about the source document */
+  metadata: {
+    /** Source filename if available */
+    filename?: string;
+    /** Document type (pdf, txt, etc.) */
+    documentType?: string;
+    /** Page number in the source document */
+    pageNumber?: number;
+    /** Chunk index within the document */
+    chunkIndex?: number;
+    /** Original document/chunk ID */
+    sourceId?: string;
+    /** Additional metadata from the vector store */
+    [key: string]: any;
+  };
+  /** Which iteration of the agent loop this citation was retrieved in */
+  usedInIteration?: number;
+  /** ID of the AI message that used this citation in its response */
+  usedByMessageId?: string;
 }

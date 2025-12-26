@@ -60,28 +60,35 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
           messages: [userMessage],
           systemPrompt: KNOWLEDGE_BASE_SYSTEM_PROMPT,
           embeddingController: this.embeddingController,
+          tokensController: this.tokensController,
           structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
+          nodeName: 'CHAT_NODE',
           debug: this.debug,
         });
 
         return {
           messages: result.messages,
           structuredData: result.structuredData,
+          citations: result.citations,
+          usagePerNode: result.usagePerNode,
+        };
+      } else {
+        // Default: Invoke model with optional structured output (no RAG)
+        const result = await invokeModel({
+          model: this.model,
+          messages: [userMessage],
+          structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
+          tokensController: this.tokensController,
+          nodeName: 'CHAT_NODE',
+          debug: this.debug,
+        });
+
+        return {
+          messages: [result.response],
+          structuredData: result.structuredData,
+          usagePerNode: result.usagePerNode,
         };
       }
-
-      // Default: Invoke model with optional structured output (no RAG)
-      const result = await invokeModel({
-        model: this.model,
-        messages: [userMessage],
-        structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
-        debug: this.debug,
-      });
-
-      return {
-        messages: [result.response],
-        structuredData: result.structuredData,
-      };
     } catch (error) {
       console.error('Error in CHAT_NODE:', error);
       throw new Error(

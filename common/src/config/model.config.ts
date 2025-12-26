@@ -7,16 +7,18 @@ export interface MonitoringAiModelConfig {
   deployment: string;
   // API version if applicable
   apiVersion: string;
-
-  // Additional optional parameters
-  // Number of past messages to include in the context
-  pastMessagesIncluded?: number;
+  // Request timeout in milliseconds
+  modelRequestTimeout: number;
+  // Number of retries for failed requests
+  modelMaxRetries: number;
   // Maximum tokens for the model response
-  maxTokens?: number;
+  maxTokens: number;
   // Sampling temperature for response generation
-  temperature?: number;
+  temperature: number;
   // Nucleus sampling parameter
-  topP?: number;
+  topP: number;
+  // Number of past messages to include in the context
+  pastMessagesIncluded: number;
   // System message to guide the model's behavior
-  systemMessage?: string;
+  systemMessage: string;
 }
