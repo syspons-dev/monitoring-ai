@@ -49,6 +49,20 @@ tests/             # Graph entry points for LangGraph CLI
 3. Create test entry point in `tests/`
 4. Add to `langgraph.json`
 
+## Security Considerations
+
+⚠️ **Known Vulnerabilities:**
+
+- The `xlsx` dependency has known security vulnerabilities:
+  - Prototype Pollution ([GHSA-4r6h-8v6p-xvw6](https://github.com/advisories/GHSA-4r6h-8v6p-xvw6))
+  - Regular Expression Denial of Service (ReDoS) ([GHSA-5pgg-2g8v-p4x9](https://github.com/advisories/GHSA-5pgg-2g8v-p4x9))
+
+**Recommendations:**
+- Only process Excel files from **trusted sources**
+- Do **not** process user-uploaded Excel files from untrusted sources
+- Consider implementing additional input validation and sanitization
+- Monitor for security updates to the xlsx package
+
 ## License
 
 MIT
