@@ -6,6 +6,10 @@ export interface MonitoringAiModelSettings {
   MODEL_MAX_TOKENS?: string;
   MODEL_REQUEST_TIMEOUT?: string;
   MODEL_MAX_RETRIES?: string;
+  MODEL_TEMPERATURE?: string;
+  MODEL_TOP_P?: string;
+  MODEL_PAST_MESSAGES_INCLUDED?: string;
+  MODEL_SYSTEM_MESSAGE?: string;
 }
 
 export interface MonitoringAiSettingsConfig {
@@ -26,6 +30,10 @@ export class MonitoringGraphSettings {
   readonly MODEL_MAX_TOKENS: string;
   readonly MODEL_REQUEST_TIMEOUT: string;
   readonly MODEL_MAX_RETRIES: string;
+  readonly MODEL_TEMPERATURE?: string;
+  readonly MODEL_TOP_P?: string;
+  readonly MODEL_PAST_MESSAGES_INCLUDED?: string;
+  readonly MODEL_SYSTEM_MESSAGE?: string;
 
   constructor(config: MonitoringAiSettingsConfig) {
     // Set Model Settings
@@ -39,5 +47,9 @@ export class MonitoringGraphSettings {
       config.modelSettings.MODEL_REQUEST_TIMEOUT ?? DEFAULT_SETTINGS.MODEL_REQUEST_TIMEOUT;
     this.MODEL_MAX_RETRIES =
       config.modelSettings.MODEL_MAX_RETRIES ?? DEFAULT_SETTINGS.MODEL_MAX_RETRIES;
+    this.MODEL_TEMPERATURE = config.modelSettings.MODEL_TEMPERATURE;
+    this.MODEL_TOP_P = config.modelSettings.MODEL_TOP_P;
+    this.MODEL_PAST_MESSAGES_INCLUDED = config.modelSettings.MODEL_PAST_MESSAGES_INCLUDED;
+    this.MODEL_SYSTEM_MESSAGE = config.modelSettings.MODEL_SYSTEM_MESSAGE;
   }
 }

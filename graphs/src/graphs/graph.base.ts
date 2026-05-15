@@ -48,6 +48,9 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
       },
       maxRetries: parseInt(this.settings.MODEL_MAX_RETRIES, 10),
       timeout: parseInt(this.settings.MODEL_REQUEST_TIMEOUT, 10),
+      maxTokens: parseOptionalInteger(this.settings.MODEL_MAX_TOKENS),
+      temperature: parseOptionalFloat(this.settings.MODEL_TEMPERATURE),
+      topP: parseOptionalFloat(this.settings.MODEL_TOP_P),
     });
 
     this.embeddingController = new EmbeddingController();
@@ -112,4 +115,22 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
   abstract START_NODE: (state: T) => Partial<T>;
 
   abstract END_NODE: (state: T) => Partial<T>;
+}
+
+function parseOptionalInteger(value?: string): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsedValue = parseInt(value, 10);
+  return Number.isNaN(parsedValue) ? undefined : parsedValue;
+}
+
+function parseOptionalFloat(value?: string): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsedValue = parseFloat(value);
+  return Number.isNaN(parsedValue) ? undefined : parsedValue;
 }
