@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-graphs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "LangGraph implementations for monitoring AI workflows",
   "license": "MIT",
   "type": "module",
@@ -11,13 +11,17 @@
     "README.md"
   ],
   "scripts": {
-    "start:debug": "tsc-watch --noClear -p tsconfig.json --onSuccess 'bash ../.vscode/debug.graphs.sh'",
+    "start:debug": "npx @langchain/langgraph-cli dev",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "npx @langchain/langgraph-cli dev",
+    "publishPackage": "npm publish",
+    "publishPackage:dev": "npm version prerelease --preid dev --no-git-tag-version && npm run build && npm run publishPackage",
+    "publishPackage:patch": "npm version patch --no-git-tag-version && npm run build && npm run publishPackage",
+    "publishPackage:major": "npm version major --no-git-tag-version && npm run build && npm run publishPackage",
     "chroma:start": "npx chroma run --path ./chroma_data --port 8000",
     "chroma:stop": "pkill -f 'chroma run' || true"
   },

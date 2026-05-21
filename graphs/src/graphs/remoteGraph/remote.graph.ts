@@ -56,6 +56,10 @@ export class MonitoringAiRemoteGraph extends MonitoringAiBaseGraph<MonitoringAiB
         modelSettings: {
           modelName: this.settings.MODEL_NAME,
           maxTokens: this.settings.MODEL_MAX_TOKENS,
+          temperature: this.settings.MODEL_TEMPERATURE,
+          topP: this.settings.MODEL_TOP_P,
+          pastMessagesIncluded: this.settings.MODEL_PAST_MESSAGES_INCLUDED,
+          modelRequestTimeout: this.settings.MODEL_REQUEST_TIMEOUT,
         },
       });
 
