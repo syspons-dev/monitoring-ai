@@ -24,6 +24,10 @@
   "scripts": {
     "lint": "eslint common/src graphs/src",
     "lint:fix": "eslint common/src graphs/src --fix",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "build": "npm run build -w common && npm run build -w graphs"
   },
   "devDependencies": {
