@@ -16,6 +16,7 @@ This directory contains scripts that enable GitHub Copilot to automatically comm
 Node.js script with full analysis and GitHub API preparation.
 
 **Usage:**
+
 ```bash
 # Analyze current changes
 node .vscode/copilot-commit.mjs --analyze
@@ -25,6 +26,7 @@ node .vscode/copilot-commit.mjs --prepare
 ```
 
 **Features:**
+
 - 📊 Analyzes changed files by category (common/graphs/config/docs)
 - 💡 Generates semantic commit messages
 - 📦 Prepares file data for `mcp_github_push_files`
@@ -36,6 +38,7 @@ node .vscode/copilot-commit.mjs --prepare
 Simple bash script for basic analysis.
 
 **Usage:**
+
 ```bash
 bash .vscode/auto-commit.sh
 ```
@@ -45,6 +48,7 @@ bash .vscode/auto-commit.sh
 When you ask Copilot to "commit changes", it should:
 
 1. **Run analysis:**
+
    ```bash
    node .vscode/copilot-commit.mjs --prepare
    ```
@@ -79,6 +83,7 @@ The script follows [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `refactor`: Code refactoring
@@ -88,6 +93,7 @@ The script follows [Conventional Commits](https://www.conventionalcommits.org/):
 - `style`: Code style changes
 
 **Scopes:**
+
 - `common`: Changes to common package
 - `graphs`: Changes to graphs package
 - `config`: Configuration changes
@@ -96,22 +102,26 @@ The script follows [Conventional Commits](https://www.conventionalcommits.org/):
 ## Example Interactions
 
 ### Ask Copilot to commit:
+
 ```
 User: "Commit the current changes"
 ```
 
 Copilot will:
+
 1. Run `node .vscode/copilot-commit.mjs --prepare`
 2. Analyze the output
 3. Call `mcp_github_push_files` with appropriate data
 4. Confirm the commit
 
 ### View changes before committing:
+
 ```
 User: "What changes are ready to commit?"
 ```
 
 Copilot will:
+
 1. Run `node .vscode/copilot-commit.mjs --analyze`
 2. Show you a summary of changed files
 3. Suggest a commit message
@@ -128,12 +138,14 @@ Copilot will:
 ## When to Use Regular Git
 
 Use traditional git commands (`git add`, `git commit`, `git push`) for:
+
 - ❌ Commits with file deletions
 - ❌ File renames (detected as delete + add)
 - ❌ Complex refactorings with many file moves
 - ❌ Binary file changes
 
 Use the GitHub API tool for:
+
 - ✅ Simple file modifications
 - ✅ Adding new files
 - ✅ Documentation updates
@@ -152,6 +164,7 @@ git push origin main
 ## Configuration
 
 Edit `copilot-commit.mjs` to customize:
+
 - `REPO_OWNER`: GitHub repository owner
 - `REPO_NAME`: Repository name
 - Commit message generation logic (line 52-85)
@@ -160,6 +173,7 @@ Edit `copilot-commit.mjs` to customize:
 ## Troubleshooting
 
 **Script not executable:**
+
 ```bash
 chmod +x .vscode/copilot-commit.mjs
 chmod +x .vscode/auto-commit.sh
@@ -172,6 +186,7 @@ Ensure Node.js 18+ is installed: `node --version`
 Check GitHub authentication is configured for Copilot
 
 **Files not pushed:**
+
 - Verify branch permissions
 - Check file size limits
 - Ensure files are readable

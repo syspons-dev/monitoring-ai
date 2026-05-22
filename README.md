@@ -58,6 +58,7 @@ tests/             # Graph entry points for LangGraph CLI
   - Regular Expression Denial of Service (ReDoS) ([GHSA-5pgg-2g8v-p4x9](https://github.com/advisories/GHSA-5pgg-2g8v-p4x9))
 
 **Recommendations:**
+
 - Only process Excel files from **trusted sources**
 - Do **not** process user-uploaded Excel files from untrusted sources
 - Consider implementing additional input validation and sanitization

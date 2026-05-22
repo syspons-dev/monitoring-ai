@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Copilot Auto-Commit Helper
- * 
+ *
  * This script helps GitHub Copilot commit changes by:
  * 1. Analyzing current git changes
  * 2. Preparing file data for GitHub API
  * 3. Providing commit message suggestions
- * 
+ *
  * Usage: node copilot-commit.mjs [--analyze|--prepare]
  */
 
@@ -42,10 +42,11 @@ function getCurrentBranch() {
 
 function getChangedFiles() {
   const output = execSync('git status --porcelain', { cwd: REPO_ROOT, encoding: 'utf-8' });
-  
-  return output.split('\n')
-    .filter(line => line.trim())
-    .map(line => {
+
+  return output
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => {
       const status = line.substring(0, 2).trim();
       const filePath = line.substring(3).trim();
       return { status, filePath };
@@ -81,15 +82,17 @@ function generateCommitMessage(changes) {
   changes.forEach(({ filePath }) => {
     if (filePath.startsWith('common/')) filesByType.common.push(filePath);
     else if (filePath.startsWith('graphs/')) filesByType.graphs.push(filePath);
-    else if (filePath.includes('config') || filePath.includes('.json')) filesByType.config.push(filePath);
-    else if (filePath.endsWith('.md') || filePath.includes('README')) filesByType.docs.push(filePath);
+    else if (filePath.includes('config') || filePath.includes('.json'))
+      filesByType.config.push(filePath);
+    else if (filePath.endsWith('.md') || filePath.includes('README'))
+      filesByType.docs.push(filePath);
     else filesByType.other.push(filePath);
   });
 
   // Detect major changes
-  const hasRename = changes.some(c => c.status === 'R');
-  const hasRefactor = changes.some(c => 
-    c.filePath.includes('external') || c.filePath.includes('remote')
+  const hasRename = changes.some((c) => c.status === 'R');
+  const hasRefactor = changes.some(
+    (c) => c.filePath.includes('external') || c.filePath.includes('remote')
   );
 
   let type = 'chore';
@@ -108,7 +111,7 @@ function generateCommitMessage(changes) {
     scope = 'common';
   }
 
-  const commitMessage = scope 
+  const commitMessage = scope
     ? `${type}(${scope}): ${description || 'update implementation'}`
     : `${type}: ${description || 'update files'}`;
 
@@ -117,26 +120,27 @@ function generateCommitMessage(changes) {
 
 function analyzeChanges() {
   log('\n📊 Analyzing Repository Changes\n', 'cyan');
-  
+
   const branch = getCurrentBranch();
   log(`Branch: ${branch}`, 'blue');
-  
+
   const changes = getChangedFiles();
-  
+
   if (changes.length === 0) {
     log('\n✅ No changes to commit', 'green');
     return { hasChanges: false };
   }
-  
+
   log(`\n📝 Changed files (${changes.length}):`, 'yellow');
   changes.forEach(({ status, filePath }) => {
-    const statusLabel = {
-      'M': '📝 Modified',
-      'A': '✅ Added',
-      'D': '❌ Deleted',
-      'R': '🔄 Renamed',
-      '??': '❓ Untracked',
-    }[status] || status;
+    const statusLabel =
+      {
+        M: '📝 Modified',
+        A: '✅ Added',
+        D: '❌ Deleted',
+        R: '🔄 Renamed',
+        '??': '❓ Untracked',
+      }[status] || status;
     log(`  ${statusLabel}: ${filePath}`);
   });
 
@@ -154,7 +158,7 @@ function analyzeChanges() {
 
 function prepareForGitHubApi() {
   const analysis = analyzeChanges();
-  
+
   if (!analysis.hasChanges) {
     return null;
   }
@@ -186,16 +190,16 @@ function prepareForGitHubApi() {
         content: content,
       };
     })
-    .filter(file => file !== null);
+    .filter((file) => file !== null);
 
   log(`\n📦 Ready to push ${files.length} files`, 'cyan');
-  
+
   if (deletions.length > 0) {
     log('\n⚠️  Remember: After committing via GitHub API, run:', 'yellow');
     log('  git reset --hard origin/main', 'blue');
     log('  (to sync local repo with remote)', 'dim');
   }
-  
+
   return {
     owner: REPO_OWNER,
     repo: REPO_NAME,
@@ -212,27 +216,27 @@ switch (command) {
   case '--analyze':
     analyzeChanges();
     break;
-    
+
   case '--prepare':
     const data = prepareForGitHubApi();
     if (data) {
-  log('\n📋 GitHub API Data (for Copilot):\n', 'cyan');
+      log('\n📋 GitHub API Data (for Copilot):\n', 'cyan');
       // Mask the actual file contents for cleaner output, just show structure
       const dataPreview = {
         ...data,
-        files: data.files.map(f => ({ path: f.path, size: f.content.length }))
+        files: data.files.map((f) => ({ path: f.path, size: f.content.length })),
       };
       console.log(JSON.stringify(data, null, 2));
     }
     break;
-    
+
   default:
     log('\nCopilot Auto-Commit Helper\n', 'cyan');
     log('Usage:', 'yellow');
     log('  node copilot-commit.mjs --analyze   # Analyze changes');
     log('  node copilot-commit.mjs --prepare   # Prepare for GitHub API\n');
     log('This script helps Copilot commit changes via GitHub MCP tools.\n');
-    
+
     // Show current status
     analyzeChanges();
 }

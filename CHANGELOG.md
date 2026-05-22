@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Why:** Fixed TypeScript type incompatibility when using `@syspons/monitoring-ai-graphs` in consuming applications. Previously, having duplicate copies of `@langchain/core` in `node_modules` caused type errors.
 
 **What Changed:**
+
 - Moved `@langchain/core`, `@langchain/community`, `@langchain/langgraph`, and `@langchain/openai` from `dependencies` to `peerDependencies` in `@syspons/monitoring-ai-graphs`
 - These packages are now required to be installed by consuming applications
 
@@ -74,6 +75,7 @@ Complete token usage and cost tracking infrastructure:
 ## [0.1.8] - 2025-12-XX
 
 ### Added
+
 - Initial implementation of LangGraph graphs
 - EmbeddingController for ChromaDB vector store management
 - Document processing utilities (PDF, DOCX, XLSX, CSV, HTML)
@@ -82,10 +84,12 @@ Complete token usage and cost tracking infrastructure:
 - Chunking strategies for text processing
 
 ### Changed
+
 - Improved error handling across controllers
 - Enhanced type safety with TypeScript strict mode
 
 ### Fixed
+
 - Various bug fixes and stability improvements
 
 [0.2.0]: https://github.com/syspons/monitoring-ai/compare/v0.1.8...v0.2.0

@@ -16,6 +16,7 @@ The `EmbeddingController` now supports automatic parsing and vectorization of do
 ## Text Chunking Strategies
 
 ### 1. **Recursive** (Recommended)
+
 Uses a hierarchy of separators to intelligently split text while preserving context.
 
 ```typescript
@@ -28,6 +29,7 @@ Uses a hierarchy of separators to intelligently split text while preserving cont
 ```
 
 ### 2. **Fixed Size**
+
 Splits text into fixed-character chunks with optional overlap.
 
 ```typescript
@@ -39,6 +41,7 @@ Splits text into fixed-character chunks with optional overlap.
 ```
 
 ### 3. **Sentence**
+
 Groups sentences together up to the maximum chunk size.
 
 ```typescript
@@ -49,6 +52,7 @@ Groups sentences together up to the maximum chunk size.
 ```
 
 ### 4. **Paragraph**
+
 Groups paragraphs together up to the maximum chunk size.
 
 ```typescript
@@ -73,7 +77,7 @@ const controller = new EmbeddingController();
 await controller.initialize({
   url: 'http://localhost:8000',
   collectionName: 'documents',
-  embeddingModel: new AzureOpenAIEmbeddings()
+  embeddingModel: new AzureOpenAIEmbeddings(),
 });
 
 // Process a single PDF
@@ -83,8 +87,8 @@ const chunksAdded = await controller.addDocumentsFromFiles([
     source: pdfBuffer,
     type: MonitoringAiDocumentType.pdf,
     metadata: { category: 'manual', version: '1.0' },
-    idPrefix: 'manual_v1'
-  }
+    idPrefix: 'manual_v1',
+  },
 ]);
 
 console.log(`Added ${chunksAdded} document chunks`);
@@ -97,24 +101,24 @@ const files = [
   {
     source: await readFile('./doc1.pdf'),
     type: MonitoringAiDocumentType.pdf,
-    metadata: { category: 'technical', author: 'John' }
+    metadata: { category: 'technical', author: 'John' },
   },
   {
     source: await readFile('./data.xlsx'),
     type: MonitoringAiDocumentType.xlsx,
-    metadata: { category: 'data', year: 2024 }
+    metadata: { category: 'data', year: 2024 },
   },
   {
     source: './readme.md', // Can also use file paths
     type: MonitoringAiDocumentType.md,
-    metadata: { category: 'documentation' }
-  }
+    metadata: { category: 'documentation' },
+  },
 ];
 
 const totalChunks = await controller.addDocumentsFromFiles(files, {
   strategy: ChunkingStrategy.recursive,
   chunkSize: 1500,
-  chunkOverlap: 300
+  chunkOverlap: 300,
 });
 ```
 
@@ -128,14 +132,14 @@ await controller.addDocumentsFromFiles(
       source: await readFile('./book.pdf'),
       type: MonitoringAiDocumentType.pdf,
       metadata: { type: 'book', title: 'AI Handbook' },
-      idPrefix: 'ai_handbook'
-    }
+      idPrefix: 'ai_handbook',
+    },
   ],
   {
     strategy: ChunkingStrategy.recursive,
     chunkSize: 2000,
     chunkOverlap: 400,
-    separators: ['\n\n\n', '\n\n', '\n', '. ', '! ', '? ', ' ', '']
+    separators: ['\n\n\n', '\n\n', '\n', '. ', '! ', '? ', ' ', ''],
   }
 );
 ```
@@ -149,7 +153,7 @@ const results = await controller.queryDocuments({
   topK: 5,
   searchMethod: EmbeddingSearchMethod.filtered_similarity,
   metadataFilter: { category: 'manual' },
-  strictness: SearchStrictness.balanced
+  strictness: SearchStrictness.balanced,
 });
 
 results.forEach((result) => {
