@@ -15,8 +15,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
+
+      - name: Configure npm auth
+        run: |
+          NPM_REGISTRY_HOST="${NPM_REGISTRY_URL#https://}"
+          NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST#http://}"
+          NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST%/}"
+          cat <<EOF > ~/.npmrc
+          @syspons:registry=${NPM_REGISTRY_URL}
+          //${NPM_REGISTRY_HOST}/:_authToken=${NPM_TOKEN}
+          always-auth=true
+          EOF
+        env:
+          NPM_REGISTRY_URL: ${{ vars.NPM_REGISTRY_URL }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: npm ci
