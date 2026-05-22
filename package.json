@@ -22,8 +22,8 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
+    "lint": "eslint common/src graphs/src",
+    "lint:fix": "eslint common/src graphs/src --fix",
     "build": "npm run build -w common && npm run build -w graphs"
   },
   "devDependencies": {
