@@ -21,7 +21,7 @@ class MonitoringAiGraphsProcessor {
   static async onGraphInit(
     params: MonitoringAiGraphsProcessorParams
   ): Promise<MonitoringAiBaseGraphStateType | void> {
-    const { graphConfig, dataflowConfig, state, modelParams } = params;
+    const { graphConfig, state } = params;
 
     MonitoringAiGraphsProcessor.validateParams(params);
 
@@ -47,7 +47,7 @@ class MonitoringAiGraphsProcessor {
   static async runGraph(
     params: MonitoringAiGraphsProcessorParams
   ): Promise<MonitoringAiBaseGraphStateType> {
-    const { graphConfig, dataflowConfig, state, modelParams } = params;
+    const { graphConfig } = params;
 
     MonitoringAiGraphsProcessor.validateParams(params);
 

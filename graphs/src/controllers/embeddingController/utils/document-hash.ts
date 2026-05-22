@@ -8,14 +8,14 @@ import { createHash } from 'crypto';
  */
 export function generateDocumentHash(content: string | Buffer, filename?: string): string {
   const hash = createHash('sha256');
-  
+
   if (filename) {
     hash.update(filename);
     hash.update('::'); // Separator
   }
-  
+
   hash.update(content);
-  
+
   return hash.digest('hex');
 }
 

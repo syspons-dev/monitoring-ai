@@ -34,7 +34,7 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
   tokensController: TokensController;
 
   // Enable debug console logs (default: false)
-  debug: boolean = false;
+  debug = false;
 
   constructor(settings: MonitoringGraphSettings) {
     this.settings = settings;
