@@ -24,6 +24,7 @@ jobs:
           NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST%/}"
           cat <<EOF > ~/.npmrc
           @syspons:registry=${NPM_REGISTRY_URL}
+          registry=${NPM_REGISTRY_URL}
           //${NPM_REGISTRY_HOST}/:_authToken=${NPM_TOKEN}
           always-auth=true
           EOF
