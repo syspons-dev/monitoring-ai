@@ -1,5 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { BaseMessage, AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import {
   Citation,
   MonitoringAiNodeUsageEntry,
@@ -337,6 +337,64 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
     return (await modelWithStructure.invoke(messages)) as Record<string, any>;
   }
 
+  function messageContentToString(content: unknown): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => {
+          if (typeof part === 'string') {
+            return part;
+          }
+
+          if (part && typeof part === 'object' && 'text' in part) {
+            return String((part as { text: unknown }).text);
+          }
+
+          return JSON.stringify(part);
+        })
+        .join('\n');
+    }
+
+    return content == null ? '' : JSON.stringify(content);
+  }
+
+  function getRetrieverContext(messages: BaseMessage[]): string {
+    const contextParts = messages
+      .filter((message) => (message as any).name === RETRIEVER_TOOL_NAME)
+      .map((message) => messageContentToString((message as any).content))
+      .filter((content) => content.trim().length > 0);
+
+    return contextParts.join('\n\n');
+  }
+
+  function buildStructuredExtractionMessages(
+    response: BaseMessage,
+    allMessages: BaseMessage[]
+  ): BaseMessage[] {
+    const assistantResponse = messageContentToString(response.content);
+    const retrieverContext = getRetrieverContext(allMessages);
+    const extractionPrompt = [
+      'Extract structured data from the assistant response below.',
+      'Use the retrieved context only as supporting evidence when it helps resolve the requested fields.',
+      '',
+      'Assistant response:',
+      assistantResponse || '(empty response)',
+      ...(retrieverContext
+        ? ['', 'Retrieved context:', retrieverContext]
+        : []),
+    ].join('\n');
+
+    return [
+      new SystemMessage(
+        'You extract structured data from a completed assistant answer. Return only data that matches the requested schema.'
+      ),
+      new HumanMessage(extractionPrompt),
+    ];
+  }
+
   /**
    * Create result with optional structured data extraction
    */
@@ -348,9 +406,10 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
     const outputMessages = excludeSystemMessage ? allMessages.slice(1) : allMessages;
 
     if (structuredDataAttributes && structuredDataAttributes.length > 0) {
+      const extractionMessages = buildStructuredExtractionMessages(response, allMessages);
       const structuredData = await extractStructuredData(
         model,
-        allMessages,
+        extractionMessages,
         structuredDataAttributes
       );
 
