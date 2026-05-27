@@ -24,8 +24,6 @@ export interface BaseInvokeParams {
   model: ChatOpenAI;
   /** Array of messages to send to the model */
   messages: BaseMessage[];
-  /** Optional system prompt to prepend to the invocation */
-  systemPrompt?: MonitoringAiPrompt | string;
   /** Optional structured data attributes to apply as schema */
   structuredDataAttributes?: StructuredDataAttribute[];
   /** Optional token controller for usage tracking */
@@ -89,13 +87,7 @@ export interface InvokeModelResult extends BaseInvokeResult {}
  * console.log(result.response.content); // "Hello! How can I help you?"
  */
 export async function invokeModel(params: InvokeModelParams): Promise<InvokeModelResult> {
-  const { model, messages, systemPrompt, structuredDataAttributes, nodeName, tokensController } =
-    params;
-  const systemPromptText =
-    typeof systemPrompt === 'string' ? systemPrompt : systemPrompt?.prompt;
-  const invocationMessages = systemPromptText
-    ? [new SystemMessage(systemPromptText), ...messages]
-    : messages;
+  const { model, messages, structuredDataAttributes, nodeName, tokensController } = params;
 
   // Check if we should use structured output
   if (structuredDataAttributes && structuredDataAttributes.length > 0) {
@@ -113,7 +105,7 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
 
     // Use withStructuredOutput to get structured data
     const modelWithStructure = model.withStructuredOutput(zodSchema, { includeRaw: true });
-    const result = await modelWithStructure.invoke(invocationMessages);
+    const result = await modelWithStructure.invoke(messages);
 
     // Return both structured data and a message representation
     const usageMetadata = (result.raw as AIMessage).usage_metadata;
@@ -128,7 +120,7 @@ export async function invokeModel(params: InvokeModelParams): Promise<InvokeMode
   }
 
   // Default behavior: plain model invocation
-  const response = await model.invoke(invocationMessages);
+  const response = await model.invoke(messages);
   const usageMetadata = response.usage_metadata;
   return {
     response: new AIMessage(response),

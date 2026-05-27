@@ -90,10 +90,6 @@ class MonitoringAiGraphsProcessor {
         MODEL_MAX_TOKENS: modelParams.maxTokens.toString(),
         MODEL_REQUEST_TIMEOUT: modelParams.modelRequestTimeout.toString(),
         MODEL_MAX_RETRIES: modelParams.modelMaxRetries.toString(),
-        MODEL_TEMPERATURE: modelParams.temperature.toString(),
-        MODEL_TOP_P: modelParams.topP.toString(),
-        MODEL_PAST_MESSAGES_INCLUDED: modelParams.pastMessagesIncluded.toString(),
-        MODEL_SYSTEM_MESSAGE: modelParams.systemMessage,
       },
     });
 

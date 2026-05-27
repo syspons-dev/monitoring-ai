@@ -1,5 +1,4 @@
 import { StateGraph, START, END, CompiledStateGraph } from '@langchain/langgraph';
-import { BaseMessage } from '@langchain/core/messages';
 
 import {
   MonitoringAiBaseGraphState,
@@ -51,19 +50,15 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
         throw new Error('No user message found in state');
       }
 
-      const conversationMessages = this.getConversationMessages(state.messages);
-      const systemPrompt = this.getConfiguredSystemPrompt();
-
       // If vector stores are configured and embedding controller is initialized, use agent with RAG
       if (this.embeddingController.isReady()) {
+        // Use the first vector store configuration
+
         // Invoke agent with retriever support
         const result = await invokeAgent({
           model: this.model,
-          messages: conversationMessages,
-          systemPrompt: {
-            ...KNOWLEDGE_BASE_SYSTEM_PROMPT,
-            prompt: combinePrompts(systemPrompt, KNOWLEDGE_BASE_SYSTEM_PROMPT.prompt),
-          },
+          messages: [userMessage],
+          systemPrompt: KNOWLEDGE_BASE_SYSTEM_PROMPT,
           embeddingController: this.embeddingController,
           tokensController: this.tokensController,
           structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
@@ -81,8 +76,7 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
         // Default: Invoke model with optional structured output (no RAG)
         const result = await invokeModel({
           model: this.model,
-          messages: conversationMessages,
-          systemPrompt,
+          messages: [userMessage],
           structuredDataAttributes: this.dataFlowConfig?.structuredDataAttributes,
           tokensController: this.tokensController,
           nodeName: 'CHAT_NODE',
@@ -107,29 +101,4 @@ export class MonitoringAiChatGraph extends MonitoringAiBaseGraph<MonitoringAiBas
     console.log('MonitoringAiChatGraph END_NODE invoked');
     return state;
   };
-
-  private getConversationMessages(messages: BaseMessage[]): BaseMessage[] {
-    const pastMessagesIncluded = parseOptionalInteger(this.settings.MODEL_PAST_MESSAGES_INCLUDED) ?? 0;
-    const totalMessagesToInclude = Math.max(1, pastMessagesIncluded + 1);
-
-    return messages.slice(-totalMessagesToInclude);
-  }
-
-  private getConfiguredSystemPrompt(): string | undefined {
-    const systemPrompt = this.settings.MODEL_SYSTEM_MESSAGE?.trim();
-    return systemPrompt ? systemPrompt : undefined;
-  }
-}
-
-function combinePrompts(configuredPrompt: string | undefined, defaultPrompt: string): string {
-  return configuredPrompt ? `${configuredPrompt}\n\n${defaultPrompt}` : defaultPrompt;
-}
-
-function parseOptionalInteger(value?: string): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsedValue = parseInt(value, 10);
-  return Number.isNaN(parsedValue) ? undefined : parsedValue;
 }
