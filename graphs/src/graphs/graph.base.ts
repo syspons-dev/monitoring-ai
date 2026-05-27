@@ -41,8 +41,6 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
     this.model = new ChatOpenAI({
       modelName: this.settings.MODEL_NAME,
       apiKey: this.settings.MODEL_API_KEY,
-      temperature: parseFloat(this.settings.MODEL_TEMPERATURE),
-      topP: parseFloat(this.settings.MODEL_TOP_P),
       configuration: {
         baseURL: this.settings.MODEL_BASE_URL,
         defaultQuery: { 'api-version': this.settings.MODEL_API_VERSION },
@@ -67,15 +65,8 @@ export abstract class MonitoringAiBaseGraph<T extends MonitoringAiBaseGraphState
         this.debug = params.debug;
       }
 
-      // Apply message window guardrail from model settings
-      const maxContextMessages = parseInt(this.settings.MODEL_PAST_MESSAGES_INCLUDED, 10);
-      const inputMessages =
-        maxContextMessages > 0 && params.state.messages.length > maxContextMessages
-          ? params.state.messages.slice(-maxContextMessages)
-          : params.state.messages;
-
       // Convert MonitoringAiMessage[] to LangChain BaseMessage[]
-      const langchainMessages = convertToLangChainMessages(inputMessages);
+      const langchainMessages = convertToLangChainMessages(params.state.messages);
 
       // Invoke graph with converted messages
       const result = await this.graph.invoke({
