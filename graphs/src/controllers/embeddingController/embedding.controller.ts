@@ -497,20 +497,15 @@ export class EmbeddingController {
       const documents: EmbeddingQueryResult[] = [];
 
       for (const [doc, score] of results) {
-        // LangChain/Chroma `similaritySearchWithScore` returns a distance (lower is better).
-        // Our API contract and strictness thresholds treat `score` as similarity (higher is better),
-        // so convert distance -> similarity before filtering/returning.
-        const similarityScore = distanceToSimilarity(score);
-
         // Apply score threshold filtering if specified
-        if (minScoreThreshold !== undefined && similarityScore < minScoreThreshold) {
+        if (minScoreThreshold !== undefined && score < minScoreThreshold) {
           continue;
         }
 
         documents.push({
           content: doc.pageContent,
           metadata: doc.metadata as EmbeddingMetadata,
-          score: similarityScore,
+          score,
         });
       }
 
@@ -741,13 +736,4 @@ export class EmbeddingController {
   clearUsageEntries(): void {
     this.tokensController?.clearUsageEntries();
   }
-}
-
-function distanceToSimilarity(distance: number): number {
-  // Default mapping for [0..1] distances: similarity = 1 - distance.
-  // Clamp defensively because some distance metrics may produce values outside [0..1].
-  if (Number.isNaN(distance)) {
-    return 0;
-  }
-  return Math.max(0, Math.min(1, 1 - distance));
 }
