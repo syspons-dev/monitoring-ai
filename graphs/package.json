@@ -1,6 +1,6 @@
 {
   "name": "@syspons/monitoring-ai-graphs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "LangGraph implementations for monitoring AI workflows",
   "license": "MIT",
   "type": "module",
@@ -18,6 +18,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "npx @langchain/langgraph-cli dev",
+    "publishPackage": "npm run build && npm publish",
+    "publishPackage:dev": "npm version prerelease --preid dev --no-git-tag-version && npm run publishPackage",
+    "publishPackage:patch": "npm version patch --no-git-tag-version && npm run publishPackage",
+    "publishPackage:minor": "npm version minor --no-git-tag-version && npm run publishPackage",
+    "publishPackage:major": "npm version major --no-git-tag-version && npm run publishPackage",
     "chroma:start": "npx chroma run --path ./chroma_data --port 8000",
     "chroma:stop": "pkill -f 'chroma run' || true"
   },
