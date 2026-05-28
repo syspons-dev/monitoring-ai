@@ -382,9 +382,7 @@ export async function invokeAgent(params: InvokeAgentParams): Promise<InvokeAgen
       '',
       'Assistant response:',
       assistantResponse || '(empty response)',
-      ...(retrieverContext
-        ? ['', 'Retrieved context:', retrieverContext]
-        : []),
+      ...(retrieverContext ? ['', 'Retrieved context:', retrieverContext] : []),
     ].join('\n');
 
     return [
