@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import {
-  MonitoringAiStructureDataReasoningIndicator,
   StructuredDataAttribute,
   StructuredDataAttributeType,
 } from '@syspons/monitoring-ai-common';
@@ -24,7 +23,7 @@ function mapToZodType(
       return z.boolean();
     case StructuredDataAttributeType.date:
       return z.string();
-    case StructuredDataAttributeType.array:
+    case StructuredDataAttributeType.array: {
       const arrayItemType = itemsType || StructuredDataAttributeType.string;
       let itemZodType: z.ZodTypeAny;
       switch (arrayItemType) {
@@ -41,6 +40,7 @@ function mapToZodType(
           itemZodType = z.string();
       }
       return z.array(itemZodType);
+    }
     case StructuredDataAttributeType.object:
       return z.record(z.string(), z.any());
     default:
@@ -61,7 +61,7 @@ export function addZodAttribute(
   attributeName: string,
   type: StructuredDataAttributeType,
   description?: string,
-  required: boolean = false
+  required = false
 ): void {
   let zodType = mapToZodType(type);
 

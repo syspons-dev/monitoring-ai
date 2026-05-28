@@ -24,10 +24,10 @@ const config: MonitoringAiWorkflowConfig = {
   remoteGraphConfig: {
     // Required: URL of the remote graph service
     remoteUrl: 'https://your-graph-service.com/api/graph/invoke',
-    
+
     // Optional: API key for authentication
     apiKey: 'your-api-key-here',
-    
+
     // Optional: Request timeout in milliseconds (default: 30000)
     timeout: 60000,
   },
@@ -39,15 +39,18 @@ const config: MonitoringAiWorkflowConfig = {
 Your remote graph service should implement the following REST API:
 
 ### Endpoint
+
 `POST <externalUrl>`
 
 ### Request Headers
+
 ```
 Content-Type: application/json
 Authorization: Bearer <apiKey>  (if apiKey is provided)
 ```
 
 ### Request Body
+
 ```typescript
 {
   "state": {
@@ -62,6 +65,7 @@ Authorization: Bearer <apiKey>  (if apiKey is provided)
 ```
 
 ### Response
+
 The service should return a JSON object representing the updated state:
 
 ```typescript
@@ -72,6 +76,7 @@ The service should return a JSON object representing the updated state:
 ```
 
 ### Response Codes
+
 - `200`: Success - returns updated state
 - `4xx`: Client error (invalid request, authentication failure, etc.)
 - `5xx`: Server error (graph execution failure, etc.)
@@ -98,9 +103,7 @@ const result = await MonitoringAiGraphsProcessor.runGraph({
     MODEL_API_KEY: process.env.OPENAI_API_KEY,
   },
   state: {
-    messages: [
-      { role: 'user', content: 'Hello!' }
-    ],
+    messages: [{ role: 'user', content: 'Hello!' }],
   },
 });
 
@@ -136,11 +139,13 @@ try {
 ## Implementation Details
 
 ### Constructor
+
 ```typescript
-new MonitoringAiRemoteGraph(settings, config)
+new MonitoringAiRemoteGraph(settings, config);
 ```
 
 **Parameters:**
+
 - `settings`: `MonitoringGraphSettings` - Graph configuration
 - `config`: `RemoteGraphConfig` - Remote graph configuration
   - `remoteUrl`: string - URL of the remote graph service
@@ -150,15 +155,19 @@ new MonitoringAiRemoteGraph(settings, config)
 ### Methods
 
 #### `invokeGraph(state)`
+
 Invokes the remote graph with the provided state.
 
 **Parameters:**
+
 - `state`: `MonitoringAiBaseGraphState` - Current graph state
 
 **Returns:**
+
 - `Promise<Partial<MonitoringAiBaseGraphState>>` - Updated state from external service
 
 **Throws:**
+
 - Error if request fails, times out, or returns invalid response
 
 ## Best Practices
@@ -190,9 +199,9 @@ global.fetch = vi.fn();
 
 test('should invoke remote graph successfully', async () => {
   const mockResponse = {
-    messages: [{ role: 'assistant', content: 'Response' }]
+    messages: [{ role: 'assistant', content: 'Response' }],
   };
-  
+
   (fetch as any).mockResolvedValueOnce({
     ok: true,
     json: async () => mockResponse,
@@ -210,17 +219,21 @@ test('should invoke remote graph successfully', async () => {
 ## Troubleshooting
 
 ### Connection Refused
+
 - Verify the external URL is correct and accessible
 - Check network connectivity and firewall rules
 
 ### Authentication Errors
+
 - Verify API key is correct
 - Check if the Authorization header format is supported
 
 ### Timeout Errors
+
 - Increase timeout value if graph processing is slow
 - Check external service performance
 
 ### Invalid Response
+
 - Verify external service returns valid JSON
 - Check response structure matches expected format

@@ -46,13 +46,13 @@ function chunkByFixedSize(text: string, chunkSize: number, overlap: number): str
   while (startIndex < text.length) {
     const endIndex = Math.min(startIndex + chunkSize, text.length);
     const chunk = text.substring(startIndex, endIndex).trim();
-    
+
     if (chunk.length > 0) {
       chunks.push(chunk);
     }
-    
+
     startIndex += chunkSize - overlap;
-    
+
     // Prevent infinite loop
     if (startIndex <= 0) {
       startIndex = chunkSize;
@@ -68,13 +68,13 @@ function chunkByFixedSize(text: string, chunkSize: number, overlap: number): str
 function chunkBySentence(text: string, maxChunkSize: number): string[] {
   // Split by sentence endings
   const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-  
+
   const chunks: string[] = [];
   let currentChunk = '';
 
   for (const sentence of sentences) {
     const trimmedSentence = sentence.trim();
-    
+
     if (currentChunk.length + trimmedSentence.length + 1 <= maxChunkSize) {
       currentChunk += (currentChunk.length > 0 ? ' ' : '') + trimmedSentence;
     } else {
@@ -97,20 +97,20 @@ function chunkBySentence(text: string, maxChunkSize: number): string[] {
  */
 function chunkByParagraph(text: string, maxChunkSize: number): string[] {
   const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0);
-  
+
   const chunks: string[] = [];
   let currentChunk = '';
 
   for (const paragraph of paragraphs) {
     const trimmedParagraph = paragraph.trim();
-    
+
     if (currentChunk.length + trimmedParagraph.length + 2 <= maxChunkSize) {
       currentChunk += (currentChunk.length > 0 ? '\n\n' : '') + trimmedParagraph;
     } else {
       if (currentChunk.length > 0) {
         chunks.push(currentChunk);
       }
-      
+
       // If single paragraph exceeds max size, split it further
       if (trimmedParagraph.length > maxChunkSize) {
         const subChunks = chunkByFixedSize(trimmedParagraph, maxChunkSize, 0);
@@ -230,6 +230,6 @@ export function calculateOptimalChunkSize(textLength: number, targetChunks: numb
   if (targetChunks <= 0) {
     throw new Error('Target chunks must be greater than 0');
   }
-  
+
   return Math.max(100, Math.ceil(textLength / targetChunks));
 }
