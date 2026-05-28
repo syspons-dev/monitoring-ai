@@ -7,6 +7,7 @@ This repository contains dynamic LangGraph graphs using Azure AI Foundry that wi
 ## Code Style & Conventions
 
 ### TypeScript
+
 - Use TypeScript strict mode with full type safety
 - Prefer explicit return types for public APIs
 - Use interfaces for data structures and types for unions/primitives
@@ -15,6 +16,7 @@ This repository contains dynamic LangGraph graphs using Azure AI Foundry that wi
 - Avoid type casts with `as any` - find type-safe alternatives
 
 ### Naming Conventions
+
 - Use camelCase for variables, functions, and methods
 - Use PascalCase for classes, interfaces, types, and enums
 - Use UPPER_SNAKE_CASE for constants
@@ -22,6 +24,7 @@ This repository contains dynamic LangGraph graphs using Azure AI Foundry that wi
 - Use descriptive names that clearly indicate purpose
 
 ### Code Organization
+
 ```
 src/
   index.ts           # Main entry point - exports public API
@@ -32,6 +35,7 @@ src/
 ```
 
 ### File Structure
+
 - Each module should have a single responsibility
 - Export from index files to create clean public APIs
 - Keep files under 300 lines when possible
@@ -40,6 +44,7 @@ src/
 ## Development Guidelines
 
 ### Adding New Features
+
 1. Define types in `src/types/index.ts` first
 2. Implement core logic in appropriate directory
 3. Export from module's index file
@@ -49,6 +54,7 @@ src/
 7. Add entry to CHANGELOG.md
 
 ### Testing
+
 - Use Vitest for all tests
 - Aim for >80% code coverage
 - Write unit tests for all public APIs
@@ -56,18 +62,21 @@ src/
 - Use descriptive test names: `it('should <expected behavior> when <condition>')`
 
 ### Error Handling
+
 - Throw meaningful errors with clear messages
 - Use custom error classes when appropriate
 - Document thrown errors in JSDoc comments
 - Always clean up resources in finally blocks
 
 ### Documentation
+
 - Add JSDoc comments to all public APIs
 - Include parameter descriptions and return types
 - Provide usage examples for complex functions
 - Keep README.md up to date with new features
 
 ### Performance
+
 - Avoid unnecessary object cloning
 - Use sampling for high-volume scenarios
 - Minimize allocations in hot paths
@@ -76,6 +85,7 @@ src/
 ## Common Patterns
 
 ### Creating a New Metric Type
+
 ```typescript
 // 1. Add type to src/types/index.ts
 export interface CustomMetric {
@@ -94,6 +104,7 @@ recordCustomMetric(metric: Omit<CustomMetric, 'timestamp'>): void {
 ```
 
 ### Creating a New Provider
+
 ```typescript
 // In src/providers/custom-provider.ts
 import { MonitorProvider } from './index';
@@ -119,6 +130,7 @@ export * from './custom-provider';
 ```
 
 ### Adding Utility Functions
+
 ```typescript
 // In src/utils/index.ts
 
@@ -135,11 +147,13 @@ export function utilityFunction(param1: string): string {
 ## Dependencies
 
 ### Production
+
 - **Zero dependencies** - Keep it lightweight!
 - Only add dependencies if absolutely necessary
 - Consider bundle size impact
 
 ### Development
+
 - `typescript` - Type checking
 - `tsup` - Fast bundler for TypeScript
 - `vitest` - Testing framework
@@ -149,12 +163,14 @@ export function utilityFunction(param1: string): string {
 ## Build & Release
 
 ### Building
+
 ```bash
 npm run build     # Production build
 npm run dev       # Watch mode
 ```
 
 ### Testing
+
 ```bash
 npm test          # Run all tests
 npm run test:watch       # Watch mode
@@ -162,6 +178,7 @@ npm run test:coverage    # With coverage
 ```
 
 ### Publishing
+
 - Update version in `package.json` (semver)
 - Update `CHANGELOG.md`
 - Create GitHub release
@@ -188,6 +205,7 @@ npm run test:coverage    # With coverage
 ## Questions to Ask
 
 When adding features, consider:
+
 - Is this a breaking change?
 - Does it affect the public API?
 - Are there performance implications?
@@ -229,6 +247,7 @@ When the user requests client-side integration guidance or UI prompts for specif
 5. **Emphasize type safety** using exported types and enums from `@syspons/monitoring-ai-common`
 
 **Example Topics:**
+
 - Embedding provider UI integration (dropdowns vs text inputs based on `allowCustomModelName`)
 - Graph selection interfaces (using `MonitoringAiGraphs` enum and graph descriptions)
 - Data source configuration UIs (vector stores, APIs, databases)
@@ -237,6 +256,7 @@ When the user requests client-side integration guidance or UI prompts for specif
 - Document upload interfaces (with type detection and chunking options)
 
 **Response Format:**
+
 - Start with clear TypeScript code examples
 - Show how to consume registry/configuration data from common package
 - Include conditional logic for dynamic UI elements
@@ -250,22 +270,26 @@ When the user requests client-side integration guidance or UI prompts for specif
 When asked to commit changes, use the automated commit workflow:
 
 1. **Analyze changes:**
+
    ```bash
    node .vscode/copilot-tools/copilot-commit.mjs --analyze
    ```
+
    Shows summary of changed files and suggested commit message
 
 2. **Prepare for GitHub API:**
+
    ```bash
    node .vscode/copilot-tools/copilot-commit.mjs --prepare
    ```
+
    Outputs JSON with: `{owner, repo, branch, files, message}`
 
 3. **Commit via GitHub MCP:**
    ```typescript
    mcp_github_push_files({
      owner: "syspons",
-     repo: "monitoring-ai", 
+     repo: "monitoring-ai",
      branch: "main",
      files: [...], // from --prepare output
      message: "..." // suggested commit message
@@ -291,6 +315,7 @@ When asked to commit changes, use the automated commit workflow:
 ### Commit Message Format
 
 Follow Conventional Commits:
+
 - `feat(scope)`: New features
 - `fix(scope)`: Bug fixes
 - `refactor(scope)`: Code refactoring

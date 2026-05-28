@@ -37,7 +37,7 @@ export interface BaseInvokeParams {
 /**
  * Parameters for invoking the model with optional structured output
  */
-export interface InvokeModelParams extends BaseInvokeParams {}
+export type InvokeModelParams = BaseInvokeParams;
 
 /**
  * Base result shared by all invocation types
@@ -54,7 +54,7 @@ export interface BaseInvokeResult {
 /**
  * Result from model invocation
  */
-export interface InvokeModelResult extends BaseInvokeResult {}
+export type InvokeModelResult = BaseInvokeResult;
 
 // ============================================================================
 // Model Invocation Functions
